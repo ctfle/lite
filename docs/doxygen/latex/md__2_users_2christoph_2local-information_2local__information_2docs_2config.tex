@@ -1,0 +1,169 @@
+\chapter{Configuration and Logging Infrastructure}
+\hypertarget{md__2_users_2christoph_2local-information_2local__information_2docs_2config}{}\label{md__2_users_2christoph_2local-information_2local__information_2docs_2config}\index{Configuration and Logging Infrastructure@{Configuration and Logging Infrastructure}}
+\label{md__2_users_2christoph_2local-information_2local__information_2docs_2config_autotoc_md0}%
+\Hypertarget{md__2_users_2christoph_2local-information_2local__information_2docs_2config_autotoc_md0}%
+ \hypertarget{md__2_users_2christoph_2local-information_2local__information_2docs_2config_autotoc_md1}{}\doxysection{\texorpdfstring{Configurations}{Configurations}}\label{md__2_users_2christoph_2local-information_2local__information_2docs_2config_autotoc_md1}
+This module provides a set of dataclasses and logging utilities designed to coordinate parameter configuration and structured logging for scientific simulations—especially those involving parallel execution with MPI. It manages configuration for time evolution, minimization, and integrations (Runge-\/\+Kutta), and offers robust, MPI-\/sensitive logging to file and console.
+
+\DoxyHorRuler{0}
+ \hypertarget{md__2_users_2christoph_2local-information_2local__information_2docs_2config_autotoc_md3}{}\doxysection{\texorpdfstring{Logging\+Config}{Logging\+Config}}\label{md__2_users_2christoph_2local-information_2local__information_2docs_2config_autotoc_md3}
+Controls where logs are written and their verbosity.
+\begin{DoxyItemize}
+\item {\bfseries{Parameters\+:}}
+\begin{DoxyItemize}
+\item {\ttfamily logging\+\_\+folder} ({\ttfamily str})\+: Directory for log files.
+\item {\ttfamily log\+\_\+level\+\_\+console} ({\ttfamily int})\+: Console log level (e.\+g. {\ttfamily logging.\+INFO}).
+\item {\ttfamily log\+\_\+level\+\_\+file} ({\ttfamily int})\+: File log level (e.\+g. {\ttfamily logging.\+DEBUG}).
+\end{DoxyItemize}
+\end{DoxyItemize}
+
+\DoxyHorRuler{0}
+ \hypertarget{md__2_users_2christoph_2local-information_2local__information_2docs_2config_autotoc_md5}{}\doxysection{\texorpdfstring{Runge\+Kutta\+Config}{Runge\+Kutta\+Config}}\label{md__2_users_2christoph_2local-information_2local__information_2docs_2config_autotoc_md5}
+Collects parameters related to the Runge-\/\+Kutta integration.
+\begin{DoxyItemize}
+\item {\bfseries{Parameters\+:}}
+\begin{DoxyItemize}
+\item {\ttfamily petz\+\_\+map} ({\ttfamily str})\+: Type of Petz map for integration (\textquotesingle{}sqrt\textquotesingle{}, \textquotesingle{}exponential\textquotesingle{}, etc.).
+\item {\ttfamily RK\+\_\+order} ({\ttfamily str})\+: Order of Runge-\/\+Kutta scheme (\textquotesingle{}45\textquotesingle{}, \textquotesingle{}23\textquotesingle{}, \textquotesingle{}1012\textquotesingle{}).
+\item {\ttfamily max\+\_\+error} ({\ttfamily float})\+: Maximum allowable integration error. Must be \texorpdfstring{$>$}{>} 0.
+\item {\ttfamily step\+\_\+size} ({\ttfamily float})\+: Adaptive stepsize to use during integration.
+\end{DoxyItemize}
+\item {\bfseries{Validation\+:}} Asserts that {\ttfamily max\+\_\+error} is positive.
+\end{DoxyItemize}
+
+\DoxyHorRuler{0}
+ \hypertarget{md__2_users_2christoph_2local-information_2local__information_2docs_2config_autotoc_md7}{}\doxysection{\texorpdfstring{Minimization\+Config}{Minimization\+Config}}\label{md__2_users_2christoph_2local-information_2local__information_2docs_2config_autotoc_md7}
+Contains all parameters related to (local) information minimization.
+\begin{DoxyItemize}
+\item {\bfseries{Parameters\+:}}
+\begin{DoxyItemize}
+\item {\ttfamily minimization\+\_\+threshold}\+: Info threshold to trigger minimization (0–1).
+\item {\ttfamily minimization\+\_\+tolerance}\+: Relative reduction required per step.
+\item {\ttfamily conjugate\+\_\+gradient\+\_\+tolerance}\+: Tolerance for conjugate gradient convergence.
+\item {\ttfamily conjugate\+\_\+gradient\+\_\+damping}\+: Damping parameter for conjugate gradient.
+\end{DoxyItemize}
+\item {\bfseries{Validation\+:}} Asserts each parameter is in (0, 1).
+\end{DoxyItemize}
+
+\DoxyHorRuler{0}
+ \hypertarget{md__2_users_2christoph_2local-information_2local__information_2docs_2config_time_evolution_config}{}\doxysection{\texorpdfstring{Time\+Evolution\+Config}{Time\+Evolution\+Config}}\label{md__2_users_2christoph_2local-information_2local__information_2docs_2config_time_evolution_config}
+Main configuration for a simulation run.
+\begin{DoxyItemize}
+\item {\bfseries{Parameters\+:}}
+\begin{DoxyItemize}
+\item {\ttfamily max\+\_\+l}, {\ttfamily min\+\_\+l}\+: Integer levels for time evolution/minimization. Tim evolution operates between these two scales\+: information is minimized at level {\ttfamily min\+\_\+l} after a minimization is triggered when the system reached {\ttfamily minimization\+\_\+threshold} at {\ttfamily max\+\_\+l}.
+\item {\ttfamily update\+\_\+dyn\+\_\+max\+\_\+l\+\_\+threshold}\+: Precision threshold for dynamic updates of the evolution length-\/scale.
+\item {\ttfamily system\+\_\+size\+\_\+tol}\+: Tolerance for checking density matrix equality. This parameter controls dynamic increases in the system size\+: the effective system is increased when the density matrices deviate by {\ttfamily system\+\_\+size\+\_\+tol} from infinite temperature density matrices.
+\item {\ttfamily shift}\+: Used for numerical stability (should be ≥ 0).
+\item {\ttfamily save\+\_\+checkpoint}\+: Whether to save checkpoints.
+\item {\ttfamily checkpoint\+\_\+folder}\+: Directory for checkpoints and logs.
+\item {\ttfamily logging\+\_\+config}\+: Instance of {\ttfamily Logging\+Config}.
+\item {\ttfamily runge\+\_\+kutta\+\_\+config}\+: Instance of {\ttfamily Runge\+Kutta\+Config}.
+\item {\ttfamily minimization\+\_\+config}\+: Instance of {\ttfamily Minimization\+Config}.
+\end{DoxyItemize}
+\item {\bfseries{Validation\+:}} Checks that thresholds make sense—and warns about settings with subtle effects.
+\item {\bfseries{Logging Setup\+:}} Sets up the log directory and logging handlers if not already configured.
+\item {\bfseries{Serialization\+:}}
+\begin{DoxyItemize}
+\item {\ttfamily from\+\_\+yaml}\+: Load configuration from a YAML file.
+\item {\ttfamily to\+\_\+yaml}\+: Save configuration to a YAML file (default location\+: {\ttfamily checkpoint\+\_\+folder/config.\+yaml}).
+\end{DoxyItemize}
+\end{DoxyItemize}\hypertarget{md__2_users_2christoph_2local-information_2local__information_2docs_2config_autotoc_md9}{}\doxysubsection{\texorpdfstring{Usage Workflow}{Usage Workflow}}\label{md__2_users_2christoph_2local-information_2local__information_2docs_2config_autotoc_md9}
+
+\begin{DoxyEnumerate}
+\item {\bfseries{Create a {\ttfamily Time\+Evolution\+Config} instance}}, either programmatically or by loading a YAML file.
+\item On instantiation, configuration parameters are validated and logging is set up based on {\ttfamily logging\+\_\+config}.
+\end{DoxyEnumerate}\hypertarget{md__2_users_2christoph_2local-information_2local__information_2docs_2config_autotoc_md10}{}\doxysubsection{\texorpdfstring{Example\+: Creating and Saving a Configuration}{Example\+: Creating and Saving a Configuration}}\label{md__2_users_2christoph_2local-information_2local__information_2docs_2config_autotoc_md10}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{config\ =\ TimeEvolutionConfig(checkpoint\_folder=\textcolor{stringliteral}{"{}my\_data"{}})}
+\DoxyCodeLine{config.to\_yaml()\ \ \textcolor{comment}{\#\ Saves\ to\ my\_data/config.yaml}}
+\DoxyCodeLine{config\ =\ TimeEvolutionConfig.from\_yaml(\textcolor{stringliteral}{"{}my\_data/config.yaml"{}})}
+
+\end{DoxyCode}
+
+
+\DoxyHorRuler{0}
+ \hypertarget{md__2_users_2christoph_2local-information_2local__information_2docs_2config_autotoc_md12}{}\doxysection{\texorpdfstring{Data handling}{Data handling}}\label{md__2_users_2christoph_2local-information_2local__information_2docs_2config_autotoc_md12}
+\DoxyHorRuler{0}
+ \hypertarget{md__2_users_2christoph_2local-information_2local__information_2docs_2config_data_config}{}\doxysubsection{\texorpdfstring{Data\+Config}{Data\+Config}}\label{md__2_users_2christoph_2local-information_2local__information_2docs_2config_data_config}
+Holds configuration for observable computation and data collection.\hypertarget{md__2_users_2christoph_2local-information_2local__information_2docs_2config_autotoc_md14}{}\doxysubsubsection{\texorpdfstring{Attributes}{Attributes}}\label{md__2_users_2christoph_2local-information_2local__information_2docs_2config_autotoc_md14}
+\tabulinesep=1mm
+\begin{longtabu}spread 0pt [c]{*{4}{|X[-1]}|}
+\hline
+\cellcolor{\tableheadbgcolor}\textbf{ Attribute   }&\cellcolor{\tableheadbgcolor}\textbf{ Type   }&\cellcolor{\tableheadbgcolor}\textbf{ Default   }&\cellcolor{\tableheadbgcolor}\textbf{ Description    }\\\cline{1-4}
+\endfirsthead
+\hline
+\endfoot
+\hline
+\cellcolor{\tableheadbgcolor}\textbf{ Attribute   }&\cellcolor{\tableheadbgcolor}\textbf{ Type   }&\cellcolor{\tableheadbgcolor}\textbf{ Default   }&\cellcolor{\tableheadbgcolor}\textbf{ Description    }\\\cline{1-4}
+\endhead
+{\ttfamily observables}   &{\ttfamily List}   &{\ttfamily \mbox{[}\mbox{]}}   &List of user-\/defined observables (callables) to be computed.    \\\cline{1-4}
+{\ttfamily info\+\_\+lattice}   &{\ttfamily bool}   &{\ttfamily False}   &Whether to compute information lattice observable.    \\\cline{1-4}
+{\ttfamily info\+\_\+current}   &{\ttfamily bool}   &{\ttfamily False}   &Whether to compute information current observable.    \\\cline{1-4}
+{\ttfamily diffusion\+\_\+length}   &{\ttfamily bool}   &{\ttfamily True}   &Whether to compute diffusion length.    \\\cline{1-4}
+{\ttfamily diffusion\+\_\+const}   &{\ttfamily bool}   &{\ttfamily True}   &Whether to compute diffusion constant.    \\\cline{1-4}
+{\ttfamily energy\+\_\+distribution}   &{\ttfamily bool}   &{\ttfamily False}   &Whether to compute energy distribution.    \\\cline{1-4}
+{\ttfamily times}   &{\ttfamily bool}   &{\ttfamily True}   &Whether to record time observable.    \\\cline{1-4}
+{\ttfamily system\+\_\+size}   &{\ttfamily bool}   &{\ttfamily True}   &Whether to record system size observable.   \\\cline{1-4}
+\end{longtabu}
+\hypertarget{md__2_users_2christoph_2local-information_2local__information_2docs_2config_autotoc_md15}{}\doxysubsubsection{\texorpdfstring{Serialization Methods}{Serialization Methods}}\label{md__2_users_2christoph_2local-information_2local__information_2docs_2config_autotoc_md15}
+
+\begin{DoxyItemize}
+\item {\ttfamily to\+\_\+dict()}\+: Converts configuration to dictionary for YAML serialization, converting any callable observables to their function names.
+\item {\ttfamily to\+\_\+yaml(folder)}\+: Saves the configuration as a YAML file named {\ttfamily data\+\_\+config.\+yaml} within the specified folder.
+\item {\ttfamily from\+\_\+yaml(folder, full\+\_\+module\+\_\+path="{}"{})}\+: Static method that loads configuration from {\ttfamily data\+\_\+config.\+yaml}, dynamically importing and converting observable function names back to callable functions from the provided module path.
+\end{DoxyItemize}
+
+\DoxyHorRuler{0}
+ \hypertarget{md__2_users_2christoph_2local-information_2local__information_2docs_2config_data_container}{}\doxysubsection{\texorpdfstring{Data\+Container}{Data\+Container}}\label{md__2_users_2christoph_2local-information_2local__information_2docs_2config_data_container}
+Stores observable data and configuration, manages updates of observables from the current state, and handles checkpoint saving/loading in MPI environments.\hypertarget{md__2_users_2christoph_2local-information_2local__information_2docs_2config_autotoc_md17}{}\doxysubsubsection{\texorpdfstring{Initialization and Configuration}{Initialization and Configuration}}\label{md__2_users_2christoph_2local-information_2local__information_2docs_2config_autotoc_md17}
+
+\begin{DoxyItemize}
+\item Initializes with a {\ttfamily Data\+Config} instance.
+\item Sets up internal empty dictionaries for default and custom observables depending on config.
+\item Can be constructed from YAML configuration with {\ttfamily from\+\_\+yaml}.
+\end{DoxyItemize}\hypertarget{md__2_users_2christoph_2local-information_2local__information_2docs_2config_autotoc_md18}{}\doxysubsubsection{\texorpdfstring{Observables Handling}{Observables Handling}}\label{md__2_users_2christoph_2local-information_2local__information_2docs_2config_autotoc_md18}
+
+\begin{DoxyItemize}
+\item {\bfseries{Default Observables}}\+: Computed using the {\ttfamily Default\+Observables} helper class and stored in a dictionary keyed by observable name.
+\item {\bfseries{Custom Observables}}\+: Computed by calling user-\/supplied functions on {\ttfamily density\+\_\+matrix} and stored similarly keyed by their function name.
+\item Supports dynamic updating/appending of data lists per observable.
+\end{DoxyItemize}\hypertarget{md__2_users_2christoph_2local-information_2local__information_2docs_2config_autotoc_md19}{}\doxysubsubsection{\texorpdfstring{Methods}{Methods}}\label{md__2_users_2christoph_2local-information_2local__information_2docs_2config_autotoc_md19}
+
+\begin{DoxyItemize}
+\item {\ttfamily return\+\_\+latest()}\+: Returns a dictionary containing the latest values (last elements) for all observables, both default
+\item and custom. Returns {\ttfamily None} if no data exists.
+\item {\ttfamily save\+\_\+checkpoint(folder, warning=True)}\+: Saves current observables\textquotesingle{} data to pickle files per observable name in the given folder, along with saving the
+\item configuration YAML. Only rank 0 performs saving; others reset their buffers.
+\item {\ttfamily load\+\_\+checkpoint(folder)}\+: Loads observable data from pickle files if they exist.
+\item {\ttfamily attach\+\_\+to\+\_\+existing\+\_\+file(folder)}\+: Loads existing data, appends new data, and saves updated checkpoint to disk.
+\item {\ttfamily filepath\+\_\+exists(folder)}\+: Checks if the default observable files exist in a folder.
+\item {\ttfamily load\+\_\+times(folder)}\+: Static method to load times array from a {\ttfamily times.\+pkl} pickle.
+\end{DoxyItemize}\hypertarget{md__2_users_2christoph_2local-information_2local__information_2docs_2config_autotoc_md20}{}\doxysubsection{\texorpdfstring{Default\+Observables \{§default\+\_\+observables\}}{Default\+Observables \{§default\+\_\+observables\}}}\label{md__2_users_2christoph_2local-information_2local__information_2docs_2config_autotoc_md20}
+Helper class that encapsulates calculation of default observables.\hypertarget{md__2_users_2christoph_2local-information_2local__information_2docs_2config_autotoc_md21}{}\doxysubsubsection{\texorpdfstring{Supported Observables and Their Computation Methods}{Supported Observables and Their Computation Methods}}\label{md__2_users_2christoph_2local-information_2local__information_2docs_2config_autotoc_md21}
+\tabulinesep=1mm
+\begin{longtabu}spread 0pt [c]{*{3}{|X[-1]}|}
+\hline
+\cellcolor{\tableheadbgcolor}\textbf{ Observable   }&\cellcolor{\tableheadbgcolor}\textbf{ Method Name   }&\cellcolor{\tableheadbgcolor}\textbf{ Description    }\\\cline{1-3}
+\endfirsthead
+\hline
+\endfoot
+\hline
+\cellcolor{\tableheadbgcolor}\textbf{ Observable   }&\cellcolor{\tableheadbgcolor}\textbf{ Method Name   }&\cellcolor{\tableheadbgcolor}\textbf{ Description    }\\\cline{1-3}
+\endhead
+{\ttfamily diffusion\+\_\+const}   &{\ttfamily get\+\_\+diffusion\+\_\+const}   &Computes diffusion constant from the given density matrix, state, and operator.    \\\cline{1-3}
+{\ttfamily diffusion\+\_\+length}   &{\ttfamily get\+\_\+diffusion\+\_\+length}   &Computes diffusion length from {\ttfamily rho\+\_\+dict} and operator.    \\\cline{1-3}
+{\ttfamily energy\+\_\+distribution}   &{\ttfamily get\+\_\+energy\+\_\+distribution}   &Computes energy distribution similarly.    \\\cline{1-3}
+{\ttfamily system\+\_\+size}   &{\ttfamily get\+\_\+system\+\_\+size}   &Returns current system size from state.    \\\cline{1-3}
+{\ttfamily times}   &{\ttfamily get\+\_\+time}   &Returns current time from state.    \\\cline{1-3}
+{\ttfamily info\+\_\+lattice}   &{\ttfamily get\+\_\+information\+\_\+lattice}   &Returns the information lattice (passed from outside).    \\\cline{1-3}
+{\ttfamily info\+\_\+current}   &{\ttfamily get\+\_\+information\+\_\+current}   &Returns the information current from the state and operator.   \\\cline{1-3}
+\end{longtabu}
+\hypertarget{md__2_users_2christoph_2local-information_2local__information_2docs_2config_autotoc_md22}{}\doxysubsubsection{\texorpdfstring{Observable Computation Flow}{Observable Computation Flow}}\label{md__2_users_2christoph_2local-information_2local__information_2docs_2config_autotoc_md22}
+
+\begin{DoxyItemize}
+\item Invoked with observable name, {\ttfamily density\+\_\+matrix}, information dictionary, {\ttfamily State} instance, and {\ttfamily System\+Operator}.
+\item Only performs computation on MPI rank 0; others return {\ttfamily None}.
+\item Returns the computed observable value or {\ttfamily None} if the observable is not recognized. 
+\end{DoxyItemize}

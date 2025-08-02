@@ -1,0 +1,114 @@
+\chapter{Introduction}
+\hypertarget{index}{}\label{index}\index{Introduction@{Introduction}}
+\label{index_md__2_users_2christoph_2local-information_2local__information_2docs_2introduction}%
+\Hypertarget{index_md__2_users_2christoph_2local-information_2local__information_2docs_2introduction}%
+LITE allows to time evolve large scale long time evolution of quantum states for one dimensional spin systems. Here we give a basic introduction of the building blocks. For details on the algorithm check out our recent \href{https://arxiv.org/pdf/2310.06036}{\texttt{ paper}} \hypertarget{index_autotoc_md24}{}\doxysection{\texorpdfstring{Hamiltonian and Lindbladian}{Hamiltonian and Lindbladian}}\label{index_autotoc_md24}
+\hypertarget{index_autotoc_md25}{}\doxysubsection{\texorpdfstring{Hamiltonian}{Hamiltonian}}\label{index_autotoc_md25}
+To specify a \doxysectlink{md__2_users_2christoph_2local-information_2local__information_2docs_2operators_hamiltonian}{Hamiltonian}{1} we ne need to list the type of coupling we want to set up. Here is an example\+: 
+\begin{DoxyCode}{0}
+\DoxyCodeLine{J\_list\ =\ [J\ \textcolor{keywordflow}{for}\ j\ \textcolor{keywordflow}{in}\ range(L)]}
+\DoxyCodeLine{z\_list\ =\ [hz\ \textcolor{keywordflow}{for}\ j\ \textcolor{keywordflow}{in}\ range(L)]}
+\DoxyCodeLine{hamiltonian\_couplings\ =\ [[\textcolor{stringliteral}{'xx'},\ J\_list],\ [\textcolor{stringliteral}{'yy'},\ J\_list],\ [\textcolor{stringliteral}{'z'},\ z\_list]]}
+
+\end{DoxyCode}
+ First, we specify values over a given range {\ttfamily L}. Next, we define the Hamiltonian couplings by grouping our value list with identifiers. For, example {\ttfamily \textquotesingle{}xx\textquotesingle{}} implies a nearest neighbor coupling $ \sigma_j^x\sigma_{j+1}^x $ for each j and j\texorpdfstring{$\ast$}{*}1 in the system, where $\sigma_j^i $ ( $ i\in \{x,y,z\} $) are Pauli matrices. Allowed identifiers are $ x ,y, z $ and $ 1 $. To define a Hamiltonian use
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{keyword}{import}\ local\_information\ \textcolor{keyword}{as}\ li}
+\DoxyCodeLine{}
+\DoxyCodeLine{hamiltonian\ =\ li.operators.Hamiltonian(max\_l=5,\ hamiltonian\_couplings=hamiltonian\_couplings)}
+
+\end{DoxyCode}
+ The parameter {\ttfamily max\+\_\+l} specifies the largest scale at which corresponding local Hamiltonian operators will be constructed and cached. Here {\ttfamily max\+\_\+l=5} implies that all local Hamiltonians up to (including) 6 sites are built and cached.\hypertarget{index_autotoc_md26}{}\doxysubsection{\texorpdfstring{Lindbladian}{Lindbladian}}\label{index_autotoc_md26}
+Similarly, we can define a \doxysectlink{md__2_users_2christoph_2local-information_2local__information_2docs_2operators_lindbladian}{Lindbladian}{1} for time evolution in open quantum systems. This requires to specify the couplings for corresponding \href{https://en.wikipedia.org/wiki/Lindbladian}{\texttt{ jump operators}} 
+\begin{DoxyCode}{0}
+\DoxyCodeLine{dissipation\_strength\ =\ 0.1\ *\ J}
+\DoxyCodeLine{\textcolor{comment}{\#\ jump\ couplings\ }}
+\DoxyCodeLine{plus\_list\ =\ [dissipation\_strength\ \textcolor{keywordflow}{for}\ j\ \textcolor{keywordflow}{in}\ range(L)]}
+\DoxyCodeLine{minus\_list\ =\ [dissipation\_strength\ \textcolor{keywordflow}{for}\ j\ \textcolor{keywordflow}{in}\ range(L)]}
+\DoxyCodeLine{z\_list\ =\ [dissipation\_strength\ \textcolor{keywordflow}{for}\ j\ \textcolor{keywordflow}{in}\ range(L)]}
+\DoxyCodeLine{jump\_couplings\ =\ [[\textcolor{stringliteral}{'z'},z\_list]],\ [[\textcolor{stringliteral}{'+'},plus\_list],[\textcolor{stringliteral}{'-\/'},minus\_list],\ [\textcolor{stringliteral}{'z'},z\_list]]}
+\DoxyCodeLine{}
+\DoxyCodeLine{\textcolor{comment}{\#\ lindbaldian}}
+\DoxyCodeLine{lindbladian\ =\ li.operators.Lindbladian(max\_l=5,}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ hamiltonian\_couplings=hamiltonian\_couplings,\ }
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ jump\_couplings=jump\_couplings)}
+
+\end{DoxyCode}
+ The allowed tags for couplings are {\ttfamily \textquotesingle{}+\textquotesingle{}}, {\ttfamily \textquotesingle{}-\/\textquotesingle{}} and {\ttfamily \textquotesingle{}z\textquotesingle{}} representing the Lindblad jump operators $ L_+ , L_- $ as well as dephasing $ L_z $.\hypertarget{index_autotoc_md27}{}\doxysection{\texorpdfstring{Initial state}{Initial state}}\label{index_autotoc_md27}
+States are handled by the \doxysectlink{state}{State}{0} class. State objects are organised in dicts, where keys are represented by tuples of the form $ (n, \ell) $ with values representing subsystem density matrices. Thereby, $ n $ indicates the center of the corresponding subsystem and $ \ell $ represents its scale (i.\+e. the extend starting from 0 for a subsystem containing a single spin). LITE can evolve any State object.
+
+To specify a particular (initial) state you can use {\ttfamily State.\+build} 
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{keyword}{import}\ numpy\ \textcolor{keyword}{as}\ np}
+\DoxyCodeLine{prob\_up\ =\ 0.7}
+\DoxyCodeLine{P\ =\ 10}
+\DoxyCodeLine{single\_particle\_density\_matrix\ =\ np.array([[prob\_up,\ 0.0],\ [0.0,\ 1.0\ -\/\ prob\_up]])}
+\DoxyCodeLine{asymptotic\ =\ np.array([[0.5,\ 0.0],\ [0.0,\ 0.5]])}
+\DoxyCodeLine{state\ =\ [single\_particle\_density\_matrix\ \textcolor{keywordflow}{for}\ \_\ \textcolor{keywordflow}{in}\ range(P)]}
+\DoxyCodeLine{}
+\DoxyCodeLine{dens\_matrix\_list\ =\ [state,\ [asymptotic]]\ }
+\DoxyCodeLine{initial\_state\ =\ li.State.build(dens\_matrix\_list,\ level=1,\ correlation=\textcolor{keyword}{False})}
+
+\end{DoxyCode}
+ In the example above, a state is set up where {\ttfamily P} sites are initialized with a single particle density matrix describing a state which is in \$ \textbackslash{}uparrow \$ with probability 0.\+7 and \$ \textbackslash{}downarrow \$ with probability 0.\+3.\hypertarget{index_autotoc_md28}{}\doxysection{\texorpdfstring{Configurations}{Configurations}}\label{index_autotoc_md28}
+LITE involves a bunch of parameters for integrating the Schrödinger/\+Lindblad equation, the minimization for information and the algorithm itself. A documentation of all parameters can be found \doxysectlink{md__2_users_2christoph_2local-information_2local__information_2docs_2config}{here}{0}. Algorithmically, the most important parameters are \$ min\+\_\+l \$ and \$ max\+\_\+l \$, where \$ max\+\_\+l \$ sets the largest scale at which time evolution of subsystems is performed before the information is minimized at scale \$ min\+\_\+l \$. Default values are {\ttfamily min\+\_\+l = 3} and {\ttfamily max\+\_\+l = 5} (typically larger values are required for high quality results). \hypertarget{index_autotoc_md29}{}\doxysubsection{\texorpdfstring{Time\+Evolution\+Config}{Time\+Evolution\+Config}}\label{index_autotoc_md29}
+All configurations relevant for time-\/evolution are collected in the dataclass \doxysectlink{md__2_users_2christoph_2local-information_2local__information_2docs_2config_time_evolution_config}{Time\+Evolution\+Config}{1}. Create a Time\+Evolution\+Config with appropriate parameters 
+\begin{DoxyCode}{0}
+\DoxyCodeLine{checkpoint\_folder=\textcolor{stringliteral}{'./data'}}
+\DoxyCodeLine{config\ =\ li.config.TimeEvolutionConfig(save\_checkpoint=\textcolor{keyword}{True},\ checkpoint\_folder=checkpoint\_folder,\ min\_l=4,\ max\_l=6)}
+
+\end{DoxyCode}
+ Another parameter worth to be mentioned here (since it can potentially strongly influence the outcome of simulations) is {\ttfamily minimization\+\_\+threshold} controlling the frequency of information minimization. By default it is set to $ 1\times 10^{-2}$ and (from our empirical experience) should not be increased beyond $ 5\times 10^{-2}$ or dropped below $ 1\times 10^{-3}$.
+
+Furthermore, Time\+Evolution\+Config contains a Runge\+Kutta\+Config as well as a Minimization\+Config which hold all parameters regarding the adaptive Runge\+Kutta solver and the minimization of minimization based on preconditioned conjugate gradient optimisation.\hypertarget{index_autotoc_md30}{}\doxysection{\texorpdfstring{Operators, observables and data handling}{Operators, observables and data handling}}\label{index_autotoc_md30}
+The \doxysectlink{md__2_users_2christoph_2local-information_2local__information_2docs_2operators}{operator}{0} class lets you define custom operators similar to Hamiltonian and Lindbladian (which subclass Operator). You can define operators from couplings just like Hamiltonian \hypertarget{index_autotoc_md31}{}\doxysubsection{\texorpdfstring{Operators}{Operators}}\label{index_autotoc_md31}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{comment}{\#\ define\ an\ operator}}
+\DoxyCodeLine{z\_list\ =\ \ [1.0\ \textcolor{keywordflow}{for}\ j\ \textcolor{keywordflow}{in}\ range(L)]}
+\DoxyCodeLine{couplings\ =\ [[\textcolor{stringliteral}{'z'},\ z\_list]]}
+\DoxyCodeLine{z\_mag\ =\ li.operators.Operator(couplings)}
+
+\end{DoxyCode}
+\hypertarget{index_autotoc_md32}{}\doxysubsection{\texorpdfstring{Custom observables}{Custom observables}}\label{index_autotoc_md32}
+Operators can be used to compute expectation values of \doxysectlink{observables}{observables}{0} . To do this we need to specify a function that take a single argument (which will be replaced by the corresponding subsystem density matrix) and returns the observable value. For example, for operator {\ttfamily z\+\_\+mag} defined above, to obtain expectation values of {\ttfamily z\+\_\+mag} we define a function 
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{comment}{\#\ a\ function\ to\ compute\ the\ z-\/magnetization\ takes\ a\ single\ argument\ }}
+\DoxyCodeLine{\textcolor{comment}{\#\ it\ returns\ the\ 'expectation\_value'\ of\ the\ argument\ \`{}rho`}}
+\DoxyCodeLine{\textcolor{keyword}{def\ }z\_magnetization(rho):}
+\DoxyCodeLine{\ \ \ \ \textcolor{keywordflow}{return}\ z\_mag.expectation\_value(rho)}
+
+\end{DoxyCode}
+ Next, we need to add the function {\ttfamily z\+\_\+magnetization} to the list of observables we want to compute during time evolution. This is done in \doxysectlink{md__2_users_2christoph_2local-information_2local__information_2docs_2config_data_config}{Data\+Config}{2}\hypertarget{index_autotoc_md33}{}\doxysubsection{\texorpdfstring{Data\+Config}{Data\+Config}}\label{index_autotoc_md33}
+The class \doxysectlink{md__2_users_2christoph_2local-information_2local__information_2docs_2config_data_config}{Data\+Config}{2} allows to customize observables and specify the data computed during time evolution. There are a bunch of pre-\/defined observables and quantities within LITE that can be computed provided the corresponding flag is set {\ttfamily True}. For example, to compute and store the information lattice for each time step as well as our observable {\ttfamily z\+\_\+magnetization}defined above along with time and system size, use 
+\begin{DoxyCode}{0}
+\DoxyCodeLine{data\_config\ =\ li.config.DataConfig(}
+\DoxyCodeLine{\ \ \ \ info\_lattice=\textcolor{keyword}{True},}
+\DoxyCodeLine{\ \ \ \ times=\textcolor{keyword}{True},}
+\DoxyCodeLine{\ \ \ \ system\_size=\textcolor{keyword}{True},}
+\DoxyCodeLine{\ \ \ \ observables=[z\_magnetization])}
+
+\end{DoxyCode}
+ Note that {\ttfamily times} and {\ttfamily system\+\_\+size} are {\ttfamily True} by default.\hypertarget{index_autotoc_md34}{}\doxysubsection{\texorpdfstring{Data\+Container}{Data\+Container}}\label{index_autotoc_md34}
+A {\ttfamily data\+\_\+config} can now be used to generate a \doxysectlink{md__2_users_2christoph_2local-information_2local__information_2docs_2config_data_container}{Data\+Container}{2} 
+\begin{DoxyCode}{0}
+\DoxyCodeLine{data\ =\ li.config.DataContainer(config=data\_config)}
+
+\end{DoxyCode}
+\hypertarget{index_autotoc_md35}{}\doxysection{\texorpdfstring{Closed and Open Systems}{Closed and Open Systems}}\label{index_autotoc_md35}
+Using a {\ttfamily State} and {\ttfamily Hamiltonian}/{\ttfamily Lindbladian}object as well as {\ttfamily Time\+Evolution\+Config} and a {\ttfamily Data\+Container} we can now generate now assemble a {\ttfamily Closed\+System}/{\ttfamily Open\+System} 
+\begin{DoxyCode}{0}
+\DoxyCodeLine{system\ =\ li.OpenSystem(init\_state=initial\_state,\ lindbladian=lindbladian,\ config=config,}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ data=data)}
+
+\end{DoxyCode}
+ On {\ttfamily system} you can call {\ttfamily evolve} to time-\/evolve your state. 
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{keywordflow}{for}\ i\ \textcolor{keywordflow}{in}\ range(10):}
+\DoxyCodeLine{\ \ \ \ system.evolve(max\_evolution\_time=2.0,\ final\_time=\textcolor{keyword}{True})}
+
+\end{DoxyCode}
+ This will evolve the state up to time $10 \times 2.0$ (this would also work setting {\ttfamily max\+\_\+evolution\+\_\+time=20.\+0} however the above iterative version has the advantage that data gets checkpointed after each iteration).\hypertarget{index_autotoc_md36}{}\doxysection{\texorpdfstring{Check out the examples}{Check out the examples}}\label{index_autotoc_md36}
+TL;DR check out the examples. 

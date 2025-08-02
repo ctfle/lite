@@ -1,0 +1,87 @@
+\chapter{State}
+\hypertarget{state}{}\label{state}\index{State@{State}}
+\label{state_md__2_users_2christoph_2local-information_2local__information_2docs_2state}%
+\Hypertarget{state_md__2_users_2christoph_2local-information_2local__information_2docs_2state}%
+ \hypertarget{state_autotoc_md59}{}\doxysection{\texorpdfstring{Overview}{Overview}}\label{state_autotoc_md59}
+Represents the state of the system at every point in time. Manages density matrices and boundary context. The {\ttfamily State} class centralizes the system’s density matrices at all spatial and hierarchical levels, providing methods for initialization, state management, boundary handling, information analysis, and checkpointing.\hypertarget{state_autotoc_md60}{}\doxysubsection{\texorpdfstring{State Construction Patterns}{State Construction Patterns}}\label{state_autotoc_md60}
+The {\ttfamily State} class provides various class methods to build states from assorted input forms\+:
+
+
+\begin{DoxyItemize}
+\item {\ttfamily build\+\_\+finite}\+: Construct from a sequence of local density matrices for a finite system. To use this demands that all sites (defined in \doxysectlink{md__2_users_2christoph_2local-information_2local__information_2docs_2operators}{Hamiltonian}{0}) are covered.
+\item {\ttfamily build\+\_\+asymptotic}\+: Construct from separated {\ttfamily bulk} and (repeating) {\ttfamily boundary} density matrices. Not all sites need to be covered explciitly. {\ttfamily boundary} density matrices are assumed to cover the remaining parts of the system.
+\item {\ttfamily build}\+: Generic builder that dispatches to the appropriate method based on input format.
+\end{DoxyItemize}
+
+\begin{quote}
+All builders enforce consistency checks (dimensionalities, level overhead), and ensure the construction of a consistent structure (in terms of local density matrices). \end{quote}
+\hypertarget{state_autotoc_md61}{}\doxysection{\texorpdfstring{}{}}\label{state_autotoc_md61}
+\hypertarget{state_autotoc_md62}{}\doxysection{\texorpdfstring{Saving and Loading Checkpoints}{Saving and Loading Checkpoints}}\label{state_autotoc_md62}
+
+\begin{DoxyItemize}
+\item {\ttfamily save\+\_\+checkpoint(folder)} saves\+:
+\begin{DoxyItemize}
+\item The density matrix dictionary as a pickle file ({\ttfamily state.\+pkl}).
+\item The meta data as a YAML file ({\ttfamily state\+\_\+meta\+\_\+data.\+yaml}).
+\end{DoxyItemize}
+\item {\ttfamily from\+\_\+checkpoint(folder)} loads both, restoring state.
+\end{DoxyItemize}
+
+\DoxyHorRuler{0}
+ \hypertarget{state_autotoc_md64}{}\doxysection{\texorpdfstring{Properties and Methods}{Properties and Methods}}\label{state_autotoc_md64}
+\hypertarget{state_autotoc_md65}{}\doxysubsection{\texorpdfstring{Properties}{Properties}}\label{state_autotoc_md65}
+
+\begin{DoxyItemize}
+\item {\ttfamily total\+\_\+information}\+: Calculates information across all levels by summing information metrics.
+\item {\ttfamily total\+\_\+information\+\_\+at\+\_\+dyn\+\_\+max\+\_\+l}\+: Information content at the current level.
+\end{DoxyItemize}\hypertarget{state_autotoc_md66}{}\doxysubsection{\texorpdfstring{State Creation}{State Creation}}\label{state_autotoc_md66}
+
+\begin{DoxyItemize}
+\item {\ttfamily build\+\_\+finite(density\+\_\+matrices, level\+\_\+overhead)} Build state for a finite system with possibly extra levels of overhead.
+\item {\ttfamily build\+\_\+asymptotic(bulk\+\_\+density\+\_\+matrices, boundary\+\_\+density\+\_\+matrices, level\+\_\+overhead)} Build a state for semi-\/infinite or periodic structures with repeated boundary elements.
+\item {\ttfamily build(density\+\_\+matrix\+\_\+list, level\+\_\+overhead)} Dispatch to finite/asymptotic construction as required by input.
+\end{DoxyItemize}\hypertarget{state_autotoc_md67}{}\doxysubsection{\texorpdfstring{Checkpointing}{Checkpointing}}\label{state_autotoc_md67}
+
+\begin{DoxyItemize}
+\item {\ttfamily save\+\_\+checkpoint(folder)} Save state density matrices and minimal metadata in {\ttfamily folder} as a pickle ({\ttfamily state.\+pkl}) and YAML ({\ttfamily state\+\_\+meta\+\_\+data.\+yaml}).
+\item {\ttfamily from\+\_\+checkpoint(folder)} Restore the state from a previous checkpoint.
+\end{DoxyItemize}\hypertarget{state_autotoc_md68}{}\doxysubsection{\texorpdfstring{Hierarchy and Information}{Hierarchy and Information}}\label{state_autotoc_md68}
+
+\begin{DoxyItemize}
+\item {\ttfamily get\+\_\+information\+\_\+lattice()} Compute the entire information lattice from current {\ttfamily dyn\+\_\+max\+\_\+l} down to level 0.
+\item {\ttfamily get\+\_\+information\+\_\+current(operator)} Evaluate the information current (flow) induced by a supplied operator/hamiltonian.
+\item {\ttfamily reduce\+\_\+to\+\_\+level(level, pop\+\_\+boundary=False)} Coarse-\/grain the state down to a given hierarchical level.
+\end{DoxyItemize}\hypertarget{state_autotoc_md69}{}\doxysubsection{\texorpdfstring{System Manipulation}{System Manipulation}}\label{state_autotoc_md69}
+
+\begin{DoxyItemize}
+\item {\ttfamily enlarge\+\_\+left(nr\+\_\+of\+\_\+sites)}, {\ttfamily enlarge\+\_\+right(nr\+\_\+of\+\_\+sites)} Dynamically add sites at either end of the lattice (with correct hierarchical and boundary treatment).
+\item {\ttfamily check\+\_\+convergence(sites\+\_\+to\+\_\+check\+\_\+left, sites\+\_\+to\+\_\+check\+\_\+right, tolerance)} Iteratively test if the edges/boundaries converge to a known equilibrium (e.\+g., infinite temperature).
+\item {\ttfamily norm\+\_\+difference(n\+\_\+value, end)} Compute the (L2) norm difference of a boundary site’s density matrix to the canonical equilibrium.
+\item {\ttfamily update\+\_\+dyn\+\_\+max\+\_\+l(threshold, nr\+\_\+of\+\_\+updates)} Dynamically add level if any information measure exceeds a specified threshold.
+\end{DoxyItemize}\hypertarget{state_autotoc_md70}{}\doxysubsection{\texorpdfstring{Utility}{Utility}}\label{state_autotoc_md70}
+
+\begin{DoxyItemize}
+\item {\ttfamily \+\_\+\+\_\+str\+\_\+\+\_\+()} Human-\/friendly representation of the State’s main features.
+\item {\ttfamily \+\_\+\+\_\+eq\+\_\+\+\_\+(other)} Structural and information-\/equivalence test for two State instances.
+\end{DoxyItemize}
+
+\DoxyHorRuler{0}
+ \hypertarget{state_autotoc_md72}{}\doxysection{\texorpdfstring{Example Usage}{Example Usage}}\label{state_autotoc_md72}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{keyword}{from}\ local\_information.state.state\ \textcolor{keyword}{import}\ State}
+\DoxyCodeLine{}
+\DoxyCodeLine{\textcolor{comment}{\#\ Build\ a\ finite\ state\ from\ a\ list\ of\ density\ matrices\ (as\ numpy\ arrays)}}
+\DoxyCodeLine{initial\_state\ =\ State.build\_finite(density\_matrices=[rho1,\ rho2,\ rho3],\ level\_overhead=1)}
+\DoxyCodeLine{}
+\DoxyCodeLine{\textcolor{comment}{\#\ Evolve\ the\ state,\ compute\ information\ lattice}}
+\DoxyCodeLine{info\_lattice,\ \_\ =\ initial\_state.get\_information\_lattice()}
+\DoxyCodeLine{}
+\DoxyCodeLine{\textcolor{comment}{\#\ Save\ to\ disk}}
+\DoxyCodeLine{initial\_state.save\_checkpoint(\textcolor{stringliteral}{"{}checkpoints/"{}})}
+\DoxyCodeLine{}
+\DoxyCodeLine{\textcolor{comment}{\#\ Restore\ from\ disk}}
+\DoxyCodeLine{restored\ =\ State.from\_checkpoint(\textcolor{stringliteral}{"{}checkpoints/"{}})}
+
+\end{DoxyCode}
+ 
