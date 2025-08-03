@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="Black">
-    <option name="sdkName" value="local_information" />
-  </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="MY_ENV_NAME" project-jdk-type="Python SDK" />
-</project>

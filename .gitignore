@@ -1,2 +1,4 @@
 *.pkl
 *.log
+__pycache__/
+.idea/
