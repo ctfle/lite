@@ -13,8 +13,7 @@ Activate the environment using
 ```console
 $ conda activate MY_ENV_NAME
 ```
-Alternatively, the package can be installed from the package root by running
-the command
+Alternatively, the package can be installed from the package root via `pip`
 ```console
 $ pip install .
 ```
