@@ -151,4 +151,4 @@ setting ```max_evolution_time=20.0``` however the above iterative version has
 the advantage that data gets checkpointed after each iteration).
 
 ## Check out the examples
-TL;DR check out the examples.
+TL;DR check out the [examples](https://github.com/ctfle/lite/tree/main/examples).
