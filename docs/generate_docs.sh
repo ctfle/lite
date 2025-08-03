@@ -37,3 +37,4 @@ fi
 mv html ../
 cd ..
 rm -rf doxygen
+echo '<meta http-equiv="refresh" content="0; url=./html/index.html" />' > index.html

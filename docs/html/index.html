@@ -102,12 +102,12 @@ $(function(){initNavTree('index.html',''); initResizable(); });
   <div class="headertitle"><div class="title">Introduction </div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="md__2_users_2christoph_2local-information_2local__information_2docs_2introduction"></a>LITE allows to time evolve large scale long time evolution of quantum states for one dimensional spin systems. Here we give a basic introduction of the building blocks. For details on the algorithm check out our recent <a href="https://arxiv.org/pdf/2310.06036">paper</a> </p>
+<div class="textblock"><p><a class="anchor" id="md__2_users_2christoph_2github_2local__information_2docs_2introduction"></a>LITE allows to time evolve large scale long time evolution of quantum states for one dimensional spin systems. Here we give a basic introduction of the building blocks. For details on the algorithm check out our recent <a href="https://arxiv.org/pdf/2310.06036">paper</a> </p>
 <h1><a class="anchor" id="autotoc_md24"></a>
 Hamiltonian and Lindbladian</h1>
 <h2><a class="anchor" id="autotoc_md25"></a>
 Hamiltonian</h2>
-<p>To specify a <a class="el" href="md__2_users_2christoph_2local-information_2local__information_2docs_2operators.html#hamiltonian">Hamiltonian</a> we ne need to list the type of coupling we want to set up. Here is an example: </p><div class="fragment"><div class="line">J_list = [J <span class="keywordflow">for</span> j <span class="keywordflow">in</span> range(L)]</div>
+<p>To specify a <a class="el" href="md__2_users_2christoph_2github_2local__information_2docs_2operators.html#hamiltonian">Hamiltonian</a> we ne need to list the type of coupling we want to set up. Here is an example: </p><div class="fragment"><div class="line">J_list = [J <span class="keywordflow">for</span> j <span class="keywordflow">in</span> range(L)]</div>
 <div class="line">z_list = [hz <span class="keywordflow">for</span> j <span class="keywordflow">in</span> range(L)]</div>
 <div class="line">hamiltonian_couplings = [[<span class="stringliteral">&#39;xx&#39;</span>, J_list], [<span class="stringliteral">&#39;yy&#39;</span>, J_list], [<span class="stringliteral">&#39;z&#39;</span>, z_list]]</div>
 </div><!-- fragment --><p> First, we specify values over a given range <code>L</code>. Next, we define the Hamiltonian couplings by grouping our value list with identifiers. For, example <code>'xx'</code> implies a nearest neighbor coupling \( \sigma_j^x\sigma_{j+1}^x \) for each j and j*1 in the system, where \(\sigma_j^i \) ( \( i\in \{x,y,z\} \)) are Pauli matrices. Allowed identifiers are \( x ,y, z \) and \( 1 \). To define a Hamiltonian use</p>
@@ -117,7 +117,7 @@ Hamiltonian</h2>
 </div><!-- fragment --><p> The parameter <code>max_l</code> specifies the largest scale at which corresponding local Hamiltonian operators will be constructed and cached. Here <code>max_l=5</code> implies that all local Hamiltonians up to (including) 6 sites are built and cached.</p>
 <h2><a class="anchor" id="autotoc_md26"></a>
 Lindbladian</h2>
-<p>Similarly, we can define a <a class="el" href="md__2_users_2christoph_2local-information_2local__information_2docs_2operators.html#lindbladian">Lindbladian</a> for time evolution in open quantum systems. This requires to specify the couplings for corresponding <a href="https://en.wikipedia.org/wiki/Lindbladian">jump operators</a> </p><div class="fragment"><div class="line">dissipation_strength = 0.1 * J</div>
+<p>Similarly, we can define a <a class="el" href="md__2_users_2christoph_2github_2local__information_2docs_2operators.html#lindbladian">Lindbladian</a> for time evolution in open quantum systems. This requires to specify the couplings for corresponding <a href="https://en.wikipedia.org/wiki/Lindbladian">jump operators</a> </p><div class="fragment"><div class="line">dissipation_strength = 0.1 * J</div>
 <div class="line"><span class="comment"># jump couplings </span></div>
 <div class="line">plus_list = [dissipation_strength <span class="keywordflow">for</span> j <span class="keywordflow">in</span> range(L)]</div>
 <div class="line">minus_list = [dissipation_strength <span class="keywordflow">for</span> j <span class="keywordflow">in</span> range(L)]</div>
@@ -144,16 +144,16 @@ Initial state</h1>
 </div><!-- fragment --><p> In the example above, a state is set up where <code>P</code> sites are initialized with a single particle density matrix describing a state which is in $ \uparrow $ with probability 0.7 and $ \downarrow $ with probability 0.3.</p>
 <h1><a class="anchor" id="autotoc_md28"></a>
 Configurations</h1>
-<p>LITE involves a bunch of parameters for integrating the Schrödinger/Lindblad equation, the minimization for information and the algorithm itself. A documentation of all parameters can be found <a class="el" href="md__2_users_2christoph_2local-information_2local__information_2docs_2config.html">here</a>. Algorithmically, the most important parameters are $ min_l $ and $ max_l $, where $ max_l $ sets the largest scale at which time evolution of subsystems is performed before the information is minimized at scale $ min_l $. Default values are <code>min_l = 3</code> and <code>max_l = 5</code> (typically larger values are required for high quality results). </p>
+<p>LITE involves a bunch of parameters for integrating the Schrödinger/Lindblad equation, the minimization for information and the algorithm itself. A documentation of all parameters can be found <a class="el" href="md__2_users_2christoph_2github_2local__information_2docs_2config.html">here</a>. Algorithmically, the most important parameters are $ min_l $ and $ max_l $, where $ max_l $ sets the largest scale at which time evolution of subsystems is performed before the information is minimized at scale $ min_l $. Default values are <code>min_l = 3</code> and <code>max_l = 5</code> (typically larger values are required for high quality results). </p>
 <h2><a class="anchor" id="autotoc_md29"></a>
 TimeEvolutionConfig</h2>
-<p>All configurations relevant for time-evolution are collected in the dataclass <a class="el" href="md__2_users_2christoph_2local-information_2local__information_2docs_2config.html#time_evolution_config">TimeEvolutionConfig</a>. Create a TimeEvolutionConfig with appropriate parameters </p><div class="fragment"><div class="line">checkpoint_folder=<span class="stringliteral">&#39;./data&#39;</span></div>
+<p>All configurations relevant for time-evolution are collected in the dataclass <a class="el" href="md__2_users_2christoph_2github_2local__information_2docs_2config.html#time_evolution_config">TimeEvolutionConfig</a>. Create a TimeEvolutionConfig with appropriate parameters </p><div class="fragment"><div class="line">checkpoint_folder=<span class="stringliteral">&#39;./data&#39;</span></div>
 <div class="line">config = li.config.TimeEvolutionConfig(save_checkpoint=<span class="keyword">True</span>, checkpoint_folder=checkpoint_folder, min_l=4, max_l=6)</div>
 </div><!-- fragment --><p> Another parameter worth to be mentioned here (since it can potentially strongly influence the outcome of simulations) is <code>minimization_threshold</code> controlling the frequency of information minimization. By default it is set to \( 1\times 10^{-2}\) and (from our empirical experience) should not be increased beyond \( 5\times 10^{-2}\) or dropped below \( 1\times 10^{-3}\).</p>
 <p>Furthermore, TimeEvolutionConfig contains a RungeKuttaConfig as well as a MinimizationConfig which hold all parameters regarding the adaptive RungeKutta solver and the minimization of minimization based on preconditioned conjugate gradient optimisation.</p>
 <h1><a class="anchor" id="autotoc_md30"></a>
 Operators, observables and data handling</h1>
-<p>The <a class="el" href="md__2_users_2christoph_2local-information_2local__information_2docs_2operators.html">operator</a> class lets you define custom operators similar to Hamiltonian and Lindbladian (which subclass Operator). You can define operators from couplings just like Hamiltonian </p>
+<p>The <a class="el" href="md__2_users_2christoph_2github_2local__information_2docs_2operators.html">operator</a> class lets you define custom operators similar to Hamiltonian and Lindbladian (which subclass Operator). You can define operators from couplings just like Hamiltonian </p>
 <h2><a class="anchor" id="autotoc_md31"></a>
 Operators</h2>
 <div class="fragment"><div class="line"><span class="comment"># define an operator</span></div>
@@ -166,10 +166,10 @@ Custom observables</h2>
 <div class="line"><span class="comment"># it returns the &#39;expectation_value&#39; of the argument `rho`</span></div>
 <div class="line"><span class="keyword">def </span>z_magnetization(rho):</div>
 <div class="line">    <span class="keywordflow">return</span> z_mag.expectation_value(rho)</div>
-</div><!-- fragment --><p> Next, we need to add the function <code>z_magnetization</code> to the list of observables we want to compute during time evolution. This is done in <a class="el" href="md__2_users_2christoph_2local-information_2local__information_2docs_2config.html#data_config">DataConfig</a></p>
+</div><!-- fragment --><p> Next, we need to add the function <code>z_magnetization</code> to the list of observables we want to compute during time evolution. This is done in <a class="el" href="md__2_users_2christoph_2github_2local__information_2docs_2config.html#data_config">DataConfig</a></p>
 <h2><a class="anchor" id="autotoc_md33"></a>
 DataConfig</h2>
-<p>The class <a class="el" href="md__2_users_2christoph_2local-information_2local__information_2docs_2config.html#data_config">DataConfig</a> allows to customize observables and specify the data computed during time evolution. There are a bunch of pre-defined observables and quantities within LITE that can be computed provided the corresponding flag is set <code>True</code>. For example, to compute and store the information lattice for each time step as well as our observable <code>z_magnetization</code>defined above along with time and system size, use </p><div class="fragment"><div class="line">data_config = li.config.DataConfig(</div>
+<p>The class <a class="el" href="md__2_users_2christoph_2github_2local__information_2docs_2config.html#data_config">DataConfig</a> allows to customize observables and specify the data computed during time evolution. There are a bunch of pre-defined observables and quantities within LITE that can be computed provided the corresponding flag is set <code>True</code>. For example, to compute and store the information lattice for each time step as well as our observable <code>z_magnetization</code>defined above along with time and system size, use </p><div class="fragment"><div class="line">data_config = li.config.DataConfig(</div>
 <div class="line">    info_lattice=<span class="keyword">True</span>,</div>
 <div class="line">    times=<span class="keyword">True</span>,</div>
 <div class="line">    system_size=<span class="keyword">True</span>,</div>
@@ -177,7 +177,7 @@ DataConfig</h2>
 </div><!-- fragment --><p> Note that <code>times</code> and <code>system_size</code> are <code>True</code> by default.</p>
 <h2><a class="anchor" id="autotoc_md34"></a>
 DataContainer</h2>
-<p>A <code>data_config</code> can now be used to generate a <a class="el" href="md__2_users_2christoph_2local-information_2local__information_2docs_2config.html#data_container">DataContainer</a> </p><div class="fragment"><div class="line">data = li.config.DataContainer(config=data_config)</div>
+<p>A <code>data_config</code> can now be used to generate a <a class="el" href="md__2_users_2christoph_2github_2local__information_2docs_2config.html#data_container">DataContainer</a> </p><div class="fragment"><div class="line">data = li.config.DataContainer(config=data_config)</div>
 </div><!-- fragment --><h1><a class="anchor" id="autotoc_md35"></a>
 Closed and Open Systems</h1>
 <p>Using a <code>State</code> and <code>Hamiltonian</code>/<code>Lindbladian</code>object as well as <code>TimeEvolutionConfig</code> and a <code>DataContainer</code> we can now generate now assemble a <code>ClosedSystem</code>/<code>OpenSystem</code> </p><div class="fragment"><div class="line">system = li.OpenSystem(init_state=initial_state, lindbladian=lindbladian, config=config,</div>

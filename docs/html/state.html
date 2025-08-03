@@ -102,7 +102,7 @@ $(function(){initNavTree('state.html',''); initResizable(); });
   <div class="headertitle"><div class="title">State</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="md__2_users_2christoph_2local-information_2local__information_2docs_2state"></a> </p>
+<div class="textblock"><p><a class="anchor" id="md__2_users_2christoph_2github_2local__information_2docs_2state"></a> </p>
 <h1><a class="anchor" id="autotoc_md59"></a>
 Overview</h1>
 <p>Represents the state of the system at every point in time. Manages density matrices and boundary context. The <code>State</code> class centralizes the system’s density matrices at all spatial and hierarchical levels, providing methods for initialization, state management, boundary handling, information analysis, and checkpointing.</p>
@@ -110,7 +110,7 @@ Overview</h1>
 State Construction Patterns</h2>
 <p>The <code>State</code> class provides various class methods to build states from assorted input forms:</p>
 <ul>
-<li><code>build_finite</code>: Construct from a sequence of local density matrices for a finite system. To use this demands that all sites (defined in <a class="el" href="md__2_users_2christoph_2local-information_2local__information_2docs_2operators.html">Hamiltonian</a>) are covered.</li>
+<li><code>build_finite</code>: Construct from a sequence of local density matrices for a finite system. To use this demands that all sites (defined in <a class="el" href="md__2_users_2christoph_2github_2local__information_2docs_2operators.html">Hamiltonian</a>) are covered.</li>
 <li><code>build_asymptotic</code>: Construct from separated <code>bulk</code> and (repeating) <code>boundary</code> density matrices. Not all sites need to be covered explciitly. <code>boundary</code> density matrices are assumed to cover the remaining parts of the system.</li>
 <li><code>build</code>: Generic builder that dispatches to the appropriate method based on input format.</li>
 </ul>

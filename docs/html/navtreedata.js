@@ -26,45 +26,45 @@ var NAVTREE =
 [
   [ "Local Information Time Evolution (LITE)", "index.html", [
     [ "Introduction", "index.html", "index" ],
-    [ "Configuration and Logging Infrastructure", "md__2_users_2christoph_2local-information_2local__information_2docs_2config.html", [
-      [ "Configurations", "md__2_users_2christoph_2local-information_2local__information_2docs_2config.html#autotoc_md1", null ],
-      [ "LoggingConfig", "md__2_users_2christoph_2local-information_2local__information_2docs_2config.html#autotoc_md3", null ],
-      [ "RungeKuttaConfig", "md__2_users_2christoph_2local-information_2local__information_2docs_2config.html#autotoc_md5", null ],
-      [ "MinimizationConfig", "md__2_users_2christoph_2local-information_2local__information_2docs_2config.html#autotoc_md7", null ],
-      [ "TimeEvolutionConfig", "md__2_users_2christoph_2local-information_2local__information_2docs_2config.html#time_evolution_config", [
-        [ "Usage Workflow", "md__2_users_2christoph_2local-information_2local__information_2docs_2config.html#autotoc_md9", null ],
-        [ "Example: Creating and Saving a Configuration", "md__2_users_2christoph_2local-information_2local__information_2docs_2config.html#autotoc_md10", null ]
+    [ "Configuration and Logging Infrastructure", "md__2_users_2christoph_2github_2local__information_2docs_2config.html", [
+      [ "Configurations", "md__2_users_2christoph_2github_2local__information_2docs_2config.html#autotoc_md1", null ],
+      [ "LoggingConfig", "md__2_users_2christoph_2github_2local__information_2docs_2config.html#autotoc_md3", null ],
+      [ "RungeKuttaConfig", "md__2_users_2christoph_2github_2local__information_2docs_2config.html#autotoc_md5", null ],
+      [ "MinimizationConfig", "md__2_users_2christoph_2github_2local__information_2docs_2config.html#autotoc_md7", null ],
+      [ "TimeEvolutionConfig", "md__2_users_2christoph_2github_2local__information_2docs_2config.html#time_evolution_config", [
+        [ "Usage Workflow", "md__2_users_2christoph_2github_2local__information_2docs_2config.html#autotoc_md9", null ],
+        [ "Example: Creating and Saving a Configuration", "md__2_users_2christoph_2github_2local__information_2docs_2config.html#autotoc_md10", null ]
       ] ],
-      [ "Data handling", "md__2_users_2christoph_2local-information_2local__information_2docs_2config.html#autotoc_md12", [
-        [ "DataConfig", "md__2_users_2christoph_2local-information_2local__information_2docs_2config.html#data_config", [
-          [ "Attributes", "md__2_users_2christoph_2local-information_2local__information_2docs_2config.html#autotoc_md14", null ],
-          [ "Serialization Methods", "md__2_users_2christoph_2local-information_2local__information_2docs_2config.html#autotoc_md15", null ]
+      [ "Data handling", "md__2_users_2christoph_2github_2local__information_2docs_2config.html#autotoc_md12", [
+        [ "DataConfig", "md__2_users_2christoph_2github_2local__information_2docs_2config.html#data_config", [
+          [ "Attributes", "md__2_users_2christoph_2github_2local__information_2docs_2config.html#autotoc_md14", null ],
+          [ "Serialization Methods", "md__2_users_2christoph_2github_2local__information_2docs_2config.html#autotoc_md15", null ]
         ] ],
-        [ "DataContainer", "md__2_users_2christoph_2local-information_2local__information_2docs_2config.html#data_container", [
-          [ "Initialization and Configuration", "md__2_users_2christoph_2local-information_2local__information_2docs_2config.html#autotoc_md17", null ],
-          [ "Observables Handling", "md__2_users_2christoph_2local-information_2local__information_2docs_2config.html#autotoc_md18", null ],
-          [ "Methods", "md__2_users_2christoph_2local-information_2local__information_2docs_2config.html#autotoc_md19", null ]
+        [ "DataContainer", "md__2_users_2christoph_2github_2local__information_2docs_2config.html#data_container", [
+          [ "Initialization and Configuration", "md__2_users_2christoph_2github_2local__information_2docs_2config.html#autotoc_md17", null ],
+          [ "Observables Handling", "md__2_users_2christoph_2github_2local__information_2docs_2config.html#autotoc_md18", null ],
+          [ "Methods", "md__2_users_2christoph_2github_2local__information_2docs_2config.html#autotoc_md19", null ]
         ] ],
-        [ "DefaultObservables {§default_observables}", "md__2_users_2christoph_2local-information_2local__information_2docs_2config.html#autotoc_md20", [
-          [ "Supported Observables and Their Computation Methods", "md__2_users_2christoph_2local-information_2local__information_2docs_2config.html#autotoc_md21", null ],
-          [ "Observable Computation Flow", "md__2_users_2christoph_2local-information_2local__information_2docs_2config.html#autotoc_md22", null ]
+        [ "DefaultObservables {§default_observables}", "md__2_users_2christoph_2github_2local__information_2docs_2config.html#autotoc_md20", [
+          [ "Supported Observables and Their Computation Methods", "md__2_users_2christoph_2github_2local__information_2docs_2config.html#autotoc_md21", null ],
+          [ "Observable Computation Flow", "md__2_users_2christoph_2github_2local__information_2docs_2config.html#autotoc_md22", null ]
         ] ]
       ] ]
     ] ],
     [ "Observables", "observables.html", null ],
-    [ "Operator", "md__2_users_2christoph_2local-information_2local__information_2docs_2operators.html", [
-      [ "Methods", "md__2_users_2christoph_2local-information_2local__information_2docs_2operators.html#autotoc_md40", null ],
-      [ "Example Usage", "md__2_users_2christoph_2local-information_2local__information_2docs_2operators.html#autotoc_md42", null ],
-      [ "Additional functions provided", "md__2_users_2christoph_2local-information_2local__information_2docs_2operators.html#autotoc_md44", [
-        [ "Initialization", "md__2_users_2christoph_2local-information_2local__information_2docs_2operators.html#autotoc_md38", null ],
-        [ "Hamiltonian Construction Utilities", "md__2_users_2christoph_2local-information_2local__information_2docs_2operators.html#autotoc_md45", null ],
-        [ "Lindbladian Construction Utilities", "md__2_users_2christoph_2local-information_2local__information_2docs_2operators.html#autotoc_md46", null ]
+    [ "Operator", "md__2_users_2christoph_2github_2local__information_2docs_2operators.html", [
+      [ "Methods", "md__2_users_2christoph_2github_2local__information_2docs_2operators.html#autotoc_md40", null ],
+      [ "Example Usage", "md__2_users_2christoph_2github_2local__information_2docs_2operators.html#autotoc_md42", null ],
+      [ "Additional functions provided", "md__2_users_2christoph_2github_2local__information_2docs_2operators.html#autotoc_md44", [
+        [ "Initialization", "md__2_users_2christoph_2github_2local__information_2docs_2operators.html#autotoc_md38", null ],
+        [ "Hamiltonian Construction Utilities", "md__2_users_2christoph_2github_2local__information_2docs_2operators.html#autotoc_md45", null ],
+        [ "Lindbladian Construction Utilities", "md__2_users_2christoph_2github_2local__information_2docs_2operators.html#autotoc_md46", null ]
       ] ],
-      [ "Hamiltonian", "md__2_users_2christoph_2local-information_2local__information_2docs_2operators.html#hamiltonian", [
-        [ "Usage Example", "md__2_users_2christoph_2local-information_2local__information_2docs_2operators.html#autotoc_md52", null ]
+      [ "Hamiltonian", "md__2_users_2christoph_2github_2local__information_2docs_2operators.html#hamiltonian", [
+        [ "Usage Example", "md__2_users_2christoph_2github_2local__information_2docs_2operators.html#autotoc_md52", null ]
       ] ],
-      [ "Lindbladian", "md__2_users_2christoph_2local-information_2local__information_2docs_2operators.html#lindbladian", [
-        [ "Usage Example", "md__2_users_2christoph_2local-information_2local__information_2docs_2operators.html#autotoc_md58", null ]
+      [ "Lindbladian", "md__2_users_2christoph_2github_2local__information_2docs_2operators.html#lindbladian", [
+        [ "Usage Example", "md__2_users_2christoph_2github_2local__information_2docs_2operators.html#autotoc_md58", null ]
       ] ]
     ] ],
     [ "State", "state.html", [
@@ -83,7 +83,7 @@ var NAVTREE =
       ] ],
       [ "Example Usage", "state.html#autotoc_md72", null ]
     ] ],
-    [ "TODOs", "md__2_users_2christoph_2local-information_2local__information_2docs_2todo.html", null ]
+    [ "TODOs", "md__2_users_2christoph_2github_2local__information_2docs_2todo.html", null ]
   ] ]
 ];
 
