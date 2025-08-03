@@ -2,17 +2,6 @@
 LITE is a Python package for (approximate) quantum dynamics of one-dimensional quantum spin
 systems. Check out our preprint [here](https://arxiv.org/pdf/2310.06036).
 ## Installation
-Clone the repository into and empty directory of your choice
-```console
-$ git clone ...
-```
-For manual installation, install the below packages
-+ [numpy](https://numpy.org) <1.25
-+ [scipy](https://scipy.org)
-+ [quspin](https://quspin.github.io/QuSpin/Installation.html)
-+ [mpi4py](https://anaconda.org/conda-forge/mpi4py)
-+ [cattrs](https://pypi.org/project/cattrs/)
-+ [pyyaml](https://pypi.org/project/pyaml/)
 
 If you use ```conda```  you can create an environment 
 with all the required packages using:
@@ -33,6 +22,13 @@ for editable installs and development dependencies use
 ```console
 $ pip install -e '.[dev]'
 ```
+For manual installation, install the below packages
++ [numpy](https://numpy.org) <1.25
++ [scipy](https://scipy.org)
++ [quspin](https://quspin.github.io/QuSpin/Installation.html)
++ [mpi4py](https://anaconda.org/conda-forge/mpi4py)
++ [cattrs](https://pypi.org/project/cattrs/)
++ [pyyaml](https://pypi.org/project/pyaml/)
 ## Usage
 ### Multiprocessing
 If ```mpi4py``` is installed. You can use 
