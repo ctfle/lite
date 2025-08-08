@@ -2,7 +2,6 @@ import os
 import shutil
 
 import numpy as np
-from copy import deepcopy
 import pytest
 
 from local_information.lattice.lattice_dict import LatticeDict

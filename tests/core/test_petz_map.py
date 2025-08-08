@@ -1,5 +1,6 @@
 import pytest
 
+import numpy as np
 from local_information.core.petz_map import *
 from copy import deepcopy
 

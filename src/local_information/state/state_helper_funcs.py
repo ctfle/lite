@@ -2,23 +2,20 @@ from __future__ import annotations
 
 import logging
 from copy import deepcopy
-
 import numpy as np
-
 from local_information.core.utils import get_higher_level_single_processing
-
-logger = logging.getLogger()
 from local_information.lattice.lattice_dict import LatticeDict
 from local_information.core.utils import compute_mutual_information_at_level
 from local_information.mpi.mpi_funcs import get_mpi_variables
 from typing import Sequence
-
-COMM, RANK, SIZE, NAME, PARALLEL = get_mpi_variables()
-
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from local_information.typedefs import LatticeDictKeyTuple
+
+logger = logging.getLogger()
+
+COMM, RANK, SIZE, NAME, PARALLEL = get_mpi_variables()
 
 
 def total_information(rho_dict: LatticeDict, dyn_max_l: int, level: int) -> float:

@@ -1,10 +1,9 @@
 import pytest
-
+import numpy as np
 from local_information.state.build.build_finite_state import *
 from local_information.state.build.build_repeated_elements import get_boundaries
 from local_information.state.build.build_finite_state import get_finite_state
 from local_information.state.build.bulk_boundary_concatenation import (
-    get_combined,
     concatenate_bulk_and_boundaries,
 )
 

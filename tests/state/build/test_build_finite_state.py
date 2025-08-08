@@ -1,5 +1,6 @@
 import pytest
 
+import numpy as np
 from local_information.state.build.build_finite_state import *
 from local_information.state.state import State
 

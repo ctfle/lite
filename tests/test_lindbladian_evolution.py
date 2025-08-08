@@ -556,9 +556,6 @@ class TestOpenSystem:
             for key in test_closed_system.state.density_matrix.keys():
                 assert key in test_hamiltonian.subsystem_hamiltonian.keys()
 
-    def test_minimize(self, test_closed_system):
-        pass
-
     @pytest.mark.parametrize(
         "test_random_lindbladian",
         [tuple(np.random.uniform() for _ in range(9)) for _ in range(3)],
@@ -584,14 +581,13 @@ class TestOpenSystem:
         test_open_system.evolve(max_evolution_time=1.0, final_time=True)
         assert test_open_system.state.current_time == 2.0
         shutil.rmtree("test_folder")
-        pass
 
     @pytest.mark.parametrize(
         "test_random_lindbladian",
         [tuple(np.random.uniform() for _ in range(9)) for _ in range(3)],
         indirect=["test_random_lindbladian"],
     )
-    def test_lindbladian_evolution(
+    def test_lindbladian_evolution_change_params(
         self, test_random_lindbladian, test_state_1, test_data_container_1
     ):
         # tests evolution of non-trivial state with no trivial hamiltonian
@@ -613,7 +609,6 @@ class TestOpenSystem:
         test_open_system.evolve(max_evolution_time=1.0, final_time=True)
         assert test_open_system.state.current_time == 2.0
         shutil.rmtree("test_folder")
-        pass
 
 
 def some_func(rho):

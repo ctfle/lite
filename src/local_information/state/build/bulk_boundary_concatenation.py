@@ -6,7 +6,7 @@ from local_information.state.build.build_finite_state import increment_level_fro
 from typing import TYPE_CHECKING, Sequence
 
 if TYPE_CHECKING:
-    from local_information.typedefs import LatticeDictKeyTuple
+    pass
 
 
 def concatenate_bulk_and_boundaries(

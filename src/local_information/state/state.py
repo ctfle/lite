@@ -10,7 +10,6 @@ import yaml
 
 from local_information.state.state_helper_funcs import add_higher_level_site
 
-logger = logging.getLogger()
 from local_information.lattice.lattice_dict import LatticeDict
 from local_information.state.state_helper_funcs import (
     total_information,
@@ -29,7 +28,6 @@ from local_information.core.utils import (
 
 from local_information.state.boundary.state_boundary import StateBoundary
 from local_information.core.utils import (
-    get_higher_level_single_processing,
     get_higher_level,
     ptrace,
     compute_lower_level,
@@ -40,6 +38,7 @@ from typing import TYPE_CHECKING, Any, Union, Sequence
 if TYPE_CHECKING:
     from local_information.typedefs import SystemOperator
 
+logger = logging.getLogger()
 COMM, RANK, SIZE, NAME, PARALLEL = get_mpi_variables()
 
 

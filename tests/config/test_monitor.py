@@ -266,7 +266,7 @@ class TestData:
             get_diffusion_length.return_value = diff_length
             get_diffusion_const.return_value = diff_constant
             data.update_default_observables(
-                rho_dict=test_rho_dict,
+                density_matrix=test_rho_dict,
                 information_dict=LatticeDict(),
                 operator=test_hamiltonian,
                 state=test_state,
@@ -303,7 +303,7 @@ class TestData:
             _ = data.default_observables_dict["diffusion_length"]
 
     @patch.object(DefaultObservables, "get_information_lattice")
-    def test_update_default_observables_dict_with_diffusion_const_and_length(
+    def test_update_default_observables_dict_with_diffusion_const_and_length_2(
         self,
         get_information_lattice,
         test_state,

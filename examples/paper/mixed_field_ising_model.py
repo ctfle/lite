@@ -100,7 +100,7 @@ times = load_from_file(os.path.join(data_filepath, "times.pkl"))
 
 # Plot the diffusion constant over time
 plt.plot(times, diffusion_const, color="black", label="diffusion const")
-plt.title(f"Diffusion constant")
+plt.title("Diffusion constant")
 plt.xlabel("t")
 plt.ylabel("D(t)")
 plt.xscale("log")
@@ -109,7 +109,7 @@ plt.show()
 
 # Plot the diffusion length over time
 plt.plot(times, diffusion_length, color="black", label="diffusion const")
-plt.title(f"Diffusion length")
+plt.title("Diffusion length")
 plt.xlabel("t")
 plt.ylabel("D(t)")
 plt.xscale("log")

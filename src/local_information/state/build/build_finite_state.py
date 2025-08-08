@@ -1,12 +1,8 @@
 from __future__ import annotations
 
 import logging
-
 import numpy as np
-
 from local_information.core.utils import get_higher_level_single_processing
-
-logger = logging.getLogger()
 from local_information.lattice.lattice_dict import LatticeDict
 from local_information.state.state_helper_funcs import get_base_2_dim
 from local_information.core.utils import (
@@ -17,6 +13,7 @@ from local_information.core.petz_map import PetzMap
 from local_information.mpi.mpi_funcs import get_mpi_variables
 from typing import Sequence
 
+logger = logging.getLogger()
 COMM, RANK, SIZE, NAME, PARALLEL = get_mpi_variables()
 
 

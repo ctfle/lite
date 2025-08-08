@@ -70,7 +70,7 @@ class DataConfig:
     @classmethod
     def from_yaml(cls, folder: str, full_module_path: str = "") -> DataConfig:
         """
-        Initialize config from yaml. full_module_path is the full path to the module 
+        Initialize config from yaml. full_module_path is the full path to the module
         where observables are defined.
         """
         p = Path(folder)
@@ -357,7 +357,9 @@ class DefaultObservables:
         return diff_length(density_matrix=self.density_matrix, operator=self.operator)
 
     def get_energy_distribution(self):
-        return energy_distribution(density_matrix=self.density_matrix, operator=self.operator)
+        return energy_distribution(
+            density_matrix=self.density_matrix, operator=self.operator
+        )
 
     def get_system_size(self):
         return self.state.system_size

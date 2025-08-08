@@ -1,4 +1,5 @@
 import pytest
+import numpy as np
 from mock import MagicMock
 from scipy.stats import unitary_group
 
@@ -119,7 +120,6 @@ class TestMinimization:
         self, random_hamiltonian, density_matrix, level, number_of_matrices
     ):
         """tests that minimization yields the correct result"""
-        range_ = 1
         dens_mat = [density_matrix for _ in range(number_of_matrices)]
         keys = [(n + level * 0.5, level) for n in range(number_of_matrices)]
         density_matrix_dict = LatticeDict.from_list(keys, dens_mat)
@@ -303,7 +303,7 @@ def build_three_lower_levels(rho_dict, ell) -> LatticeDict:
     Computes the two lower levels for the subsequent minimization with keeping the current fix
     """
     lower_level = rho_dict.deepcopy()
-    for l in range(3):
-        density_matrices_on_lower_level = compute_lower_level(lower_level, ell - l)
+    for level in range(3):
+        density_matrices_on_lower_level = compute_lower_level(lower_level, ell - level)
         lower_level += density_matrices_on_lower_level
     return lower_level

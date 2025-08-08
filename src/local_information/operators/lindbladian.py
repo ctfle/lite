@@ -82,9 +82,11 @@ class Lindbladian(Operator):
         ## LatticeDict containing all basic onsite lindblad operators
         self.L_operators = setup_onsite_L_operators(self.max_l, self.range_, type_list)
 
-    def operator_current(self, operator: Operator) -> dict[tuple[float, int],LatticeDict]:
+    def operator_current(
+        self, operator: Operator
+    ) -> dict[tuple[float, int], LatticeDict]:
         """Computes the commutator of the Hamiltonian with each element of an onsite (!) operator."""
-        op_current: dict[tuple[float, int],LatticeDict] = {}
+        op_current: dict[tuple[float, int], LatticeDict] = {}
         for key in operator.operator.keys_at_level(operator.range_):
             op_current[key] = compute_H_onsite_operator_commutator(
                 H_n_dict=self.operator,
@@ -95,7 +97,7 @@ class Lindbladian(Operator):
         return op_current
 
     @cached_property
-    def energy_current(self) -> dict[tuple[float, int],LatticeDict]:
+    def energy_current(self) -> dict[tuple[float, int], LatticeDict]:
         """! Computes the commutator of the Hamiltonian with each of its decomposed local elements."""
         e_current = dict()
         for key in self.operator.keys_at_level(self.range_):

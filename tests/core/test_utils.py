@@ -1,6 +1,7 @@
 import pytest
 from mock import MagicMock
 
+import numpy as np
 from local_information.core.utils import *
 from local_information.lattice.lattice_dict import LatticeDict
 

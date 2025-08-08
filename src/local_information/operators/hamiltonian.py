@@ -50,7 +50,9 @@ class Hamiltonian(Operator):
             hamiltonian_couplings, self.max_l, self.range_, self.L
         )
 
-    def operator_current(self, operator: Operator) -> dict[tuple[float, int], LatticeDict]:
+    def operator_current(
+        self, operator: Operator
+    ) -> dict[tuple[float, int], LatticeDict]:
         """
         Computes the commutator of the Hamiltonian with each element of an onsite (!) operator.
         """
@@ -69,7 +71,7 @@ class Hamiltonian(Operator):
         """
         Computes the commutator of the Hamiltonian with each of its decomposed local elements.
         """
-        e_current:  dict[tuple[float, int], LatticeDict] = {}
+        e_current: dict[tuple[float, int], LatticeDict] = {}
         for key in self.operator.keys_at_level(self.range_):
             e_current[key] = compute_HH_commutator(self.operator, key)
 

@@ -1,4 +1,5 @@
 import pytest
+import numpy as np
 from scipy.linalg import expm
 
 from local_information.core.runge_kutta_solvers.local_runge_kutta import *
@@ -93,7 +94,6 @@ class TestRungeKutta:
         self, test_config, test_trivial_hamiltonian, test_state
     ):
         range_ = 1
-        time = 0
         small_time_step = 0.001
         test_rk = LocalRungeKuttaSolver(
             runge_kutta_config=test_config,
@@ -148,7 +148,6 @@ class TestRungeKutta:
         self, test_config, test_mnay_particle_hamiltonian_xx, test_state
     ):
         range_ = 1
-        time = 0
         test_rk = LocalRungeKuttaSolver(
             runge_kutta_config=test_config,
             range_=range_,

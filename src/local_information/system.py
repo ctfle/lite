@@ -1,12 +1,10 @@
 from __future__ import annotations
 
 import logging
-import sys
 from abc import ABC, abstractmethod
 from numbers import Number
 from typing import TYPE_CHECKING
 
-import numpy as np
 from mpi4py import MPI
 
 from local_information.config import TimeEvolutionConfig

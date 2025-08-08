@@ -164,8 +164,8 @@ class TestDistributeTasks:
         distributor = Distributor(random_lattice, level)
         distributed_lattice = distributor.distribute(number_of_workers=number_of_splits)
         # check that shifting works fine
-        for l, lattice in enumerate(distributed_lattice[: (lattice_length - 1)]):
-            next_lattice = distributed_lattice[l + 1]
+        for ind, lattice in enumerate(distributed_lattice[: (lattice_length - 1)]):
+            next_lattice = distributed_lattice[ind + 1]
             this_lattice_keys = list(lattice.keys())
             next_lattice_keys = list(next_lattice.keys())
             for s in range(shift):

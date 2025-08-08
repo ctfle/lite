@@ -155,7 +155,7 @@ class TimeEvolutionConfig(Config):
                 loaded = yaml.safe_load(file)
             return structure(loaded, cls)
         else:
-            raise ValueError('no such file')
+            raise ValueError("no such file")
 
     def to_yaml(self, directory: str | None = None):
         if directory:

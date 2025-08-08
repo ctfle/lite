@@ -16,7 +16,7 @@ def load_RK12_coffs():
     int_list = ["{0:d}".format(j) for j in range(10)]
     for row, con in enumerate(content):
         try:
-            if not (con[3] in int_list):
+            if con[3] not in int_list:
                 continue
             else:
                 if row < 31:
@@ -43,7 +43,7 @@ def load_RK10_coffs():
     int_list = ["{0:d}".format(j) for j in range(10)]
     for row, con in enumerate(content):
         try:
-            if not (con[1] in int_list):
+            if con[1] not in int_list:
                 continue
             else:
                 if row < 24:

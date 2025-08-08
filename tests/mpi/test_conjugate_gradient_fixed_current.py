@@ -1,3 +1,5 @@
+import pytest
+import numpy as np
 from tests.mpi.utils import *
 
 # to tests run `mpirun -n 2 python -m pytest --with-mpi test_conjugate_gradient_fixed_current.py`

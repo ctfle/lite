@@ -1,4 +1,5 @@
 import pytest
+import numpy as np
 from scipy.stats import unitary_group
 from local_information.typedefs import SystemOperator
 from local_information.core.minimization.minimization import *

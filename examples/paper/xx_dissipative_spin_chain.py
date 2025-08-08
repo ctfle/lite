@@ -128,7 +128,7 @@ times = load_from_file(os.path.join(data_filepath, "times.pkl"))
 
 # Plot the z-magnetisation diffusion constant over time
 plt.plot(times, z_mag_diff_const, color="black", label="z mag diffusion const")
-plt.title(f"Diffusion constant for z mag")
+plt.title("Diffusion constant for z mag")
 plt.xlabel("t")
 plt.ylabel("D(t)")
 plt.xscale("log")

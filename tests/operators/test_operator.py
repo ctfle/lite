@@ -183,7 +183,7 @@ class TestOperator:
         ],
         indirect=["mock_rho_dict"],
     )
-    def test_expectation_value_single_particle_operator(
+    def test_expectation_value_two_body_operator(
         self, mock_rho_dict, value, test_onsite_zz_operator
     ):
         # tests expectation value
@@ -191,9 +191,8 @@ class TestOperator:
             mock_rho_dict
         )
         assert np.allclose(expt_val, 9 * value)
-        for key, val in expt_val_dict.items():
+        for _, val in expt_val_dict.items():
             assert np.allclose(val, value)
-        pass
 
     @pytest.mark.parametrize(
         "couplings, allowed_strings, coupling_range",
@@ -483,7 +482,7 @@ class TestOperator:
             )
         ],
     )
-    def test_construct_lindbladian_id_1(
+    def test_construct_lindbladian_id_2(
         self, n_max, jump_couplings, n_min, jump_signature
     ):
         """construct_lindbladdian_id holds information

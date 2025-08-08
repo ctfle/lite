@@ -16,10 +16,10 @@ from local_information.lattice.lattice_dict import LatticeDict
 if TYPE_CHECKING:
     from numbers import Number
     from local_information.typedefs import Coupling
-logger = logging.getLogger()
 
 from local_information.mpi.mpi_funcs import get_mpi_variables
 
+logger = logging.getLogger()
 COMM, RANK, SIZE, NAME, PARALLEL = get_mpi_variables()
 
 
