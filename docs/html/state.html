@@ -103,10 +103,10 @@ $(function(){initNavTree('state.html',''); initResizable(); });
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p><a class="anchor" id="md__2_users_2christoph_2github_2local__information_2docs_2state"></a> </p>
-<h1><a class="anchor" id="autotoc_md59"></a>
+<h1><a class="anchor" id="autotoc_md60"></a>
 Overview</h1>
 <p>Represents the state of the system at every point in time. Manages density matrices and boundary context. The <code>State</code> class centralizes the system’s density matrices at all spatial and hierarchical levels, providing methods for initialization, state management, boundary handling, information analysis, and checkpointing.</p>
-<h2><a class="anchor" id="autotoc_md60"></a>
+<h2><a class="anchor" id="autotoc_md61"></a>
 State Construction Patterns</h2>
 <p>The <code>State</code> class provides various class methods to build states from assorted input forms:</p>
 <ul>
@@ -117,9 +117,9 @@ State Construction Patterns</h2>
 <blockquote class="doxtable">
 <p>&zwj;All builders enforce consistency checks (dimensionalities, level overhead), and ensure the construction of a consistent structure (in terms of local density matrices). </p>
 </blockquote>
-<h1><a class="anchor" id="autotoc_md61"></a>
-</h1>
 <h1><a class="anchor" id="autotoc_md62"></a>
+</h1>
+<h1><a class="anchor" id="autotoc_md63"></a>
 Saving and Loading Checkpoints</h1>
 <ul>
 <li><code>save_checkpoint(folder)</code> saves:<ul>
@@ -130,35 +130,35 @@ Saving and Loading Checkpoints</h1>
 <li><code>from_checkpoint(folder)</code> loads both, restoring state.</li>
 </ul>
 <hr  />
- <h1><a class="anchor" id="autotoc_md64"></a>
+ <h1><a class="anchor" id="autotoc_md65"></a>
 Properties and Methods</h1>
-<h2><a class="anchor" id="autotoc_md65"></a>
+<h2><a class="anchor" id="autotoc_md66"></a>
 Properties</h2>
 <ul>
 <li><code>total_information</code>: Calculates information across all levels by summing information metrics.</li>
 <li><code>total_information_at_dyn_max_l</code>: Information content at the current level.</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md66"></a>
+<h2><a class="anchor" id="autotoc_md67"></a>
 State Creation</h2>
 <ul>
 <li><code>build_finite(density_matrices, level_overhead)</code> Build state for a finite system with possibly extra levels of overhead.</li>
 <li><code>build_asymptotic(bulk_density_matrices, boundary_density_matrices, level_overhead)</code> Build a state for semi-infinite or periodic structures with repeated boundary elements.</li>
 <li><code>build(density_matrix_list, level_overhead)</code> Dispatch to finite/asymptotic construction as required by input.</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md67"></a>
+<h2><a class="anchor" id="autotoc_md68"></a>
 Checkpointing</h2>
 <ul>
 <li><code>save_checkpoint(folder)</code> Save state density matrices and minimal metadata in <code>folder</code> as a pickle (<code>state.pkl</code>) and YAML (<code>state_meta_data.yaml</code>).</li>
 <li><code>from_checkpoint(folder)</code> Restore the state from a previous checkpoint.</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md68"></a>
+<h2><a class="anchor" id="autotoc_md69"></a>
 Hierarchy and Information</h2>
 <ul>
 <li><code>get_information_lattice()</code> Compute the entire information lattice from current <code>dyn_max_l</code> down to level 0.</li>
 <li><code>get_information_current(operator)</code> Evaluate the information current (flow) induced by a supplied operator/hamiltonian.</li>
 <li><code>reduce_to_level(level, pop_boundary=False)</code> Coarse-grain the state down to a given hierarchical level.</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md69"></a>
+<h2><a class="anchor" id="autotoc_md70"></a>
 System Manipulation</h2>
 <ul>
 <li><code>enlarge_left(nr_of_sites)</code>, <code>enlarge_right(nr_of_sites)</code> Dynamically add sites at either end of the lattice (with correct hierarchical and boundary treatment).</li>
@@ -166,14 +166,14 @@ System Manipulation</h2>
 <li><code>norm_difference(n_value, end)</code> Compute the (L2) norm difference of a boundary site’s density matrix to the canonical equilibrium.</li>
 <li><code>update_dyn_max_l(threshold, nr_of_updates)</code> Dynamically add level if any information measure exceeds a specified threshold.</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md70"></a>
+<h2><a class="anchor" id="autotoc_md71"></a>
 Utility</h2>
 <ul>
 <li><code>__str__()</code> Human-friendly representation of the State’s main features.</li>
 <li><code>__eq__(other)</code> Structural and information-equivalence test for two State instances.</li>
 </ul>
 <hr  />
- <h1><a class="anchor" id="autotoc_md72"></a>
+ <h1><a class="anchor" id="autotoc_md73"></a>
 Example Usage</h1>
 <div class="fragment"><div class="line"><span class="keyword">from</span> local_information.state.state <span class="keyword">import</span> State</div>
 <div class="line"> </div>

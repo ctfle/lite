@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['state_0',['State',['../state.html',1,'']]]
+  ['observables_0',['Observables',['../observables.html',1,'']]],
+  ['operator_1',['Operator',['../md__2_users_2christoph_2github_2local__information_2docs_2operators.html',1,'']]]
 ];

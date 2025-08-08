@@ -149,12 +149,13 @@ class TimeEvolutionConfig(Config):
     def from_yaml(cls, directory: str) -> TimeEvolutionConfig:
         p = Path(directory)
         config_path = p / "config.yaml"
-
+        print(config_path)
         if config_path.is_file():
             with open(config_path, "r") as file:
                 loaded = yaml.safe_load(file)
-
-        return structure(loaded, cls)
+            return structure(loaded, cls)
+        else:
+            raise ValueError('no such file')
 
     def to_yaml(self, directory: str | None = None):
         if directory:

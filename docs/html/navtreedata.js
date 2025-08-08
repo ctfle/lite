@@ -51,39 +51,39 @@ var NAVTREE =
         ] ]
       ] ]
     ] ],
+    [ "Multiprocessing and Multithreading", "md__2_users_2christoph_2github_2local__information_2docs_2multiprocessing.html", null ],
     [ "Observables", "observables.html", null ],
     [ "Operator", "md__2_users_2christoph_2github_2local__information_2docs_2operators.html", [
-      [ "Methods", "md__2_users_2christoph_2github_2local__information_2docs_2operators.html#autotoc_md40", null ],
-      [ "Example Usage", "md__2_users_2christoph_2github_2local__information_2docs_2operators.html#autotoc_md42", null ],
-      [ "Additional functions provided", "md__2_users_2christoph_2github_2local__information_2docs_2operators.html#autotoc_md44", [
-        [ "Initialization", "md__2_users_2christoph_2github_2local__information_2docs_2operators.html#autotoc_md38", null ],
-        [ "Hamiltonian Construction Utilities", "md__2_users_2christoph_2github_2local__information_2docs_2operators.html#autotoc_md45", null ],
-        [ "Lindbladian Construction Utilities", "md__2_users_2christoph_2github_2local__information_2docs_2operators.html#autotoc_md46", null ]
+      [ "Methods", "md__2_users_2christoph_2github_2local__information_2docs_2operators.html#autotoc_md41", null ],
+      [ "Example Usage", "md__2_users_2christoph_2github_2local__information_2docs_2operators.html#autotoc_md43", null ],
+      [ "Additional functions provided", "md__2_users_2christoph_2github_2local__information_2docs_2operators.html#autotoc_md45", [
+        [ "Initialization", "md__2_users_2christoph_2github_2local__information_2docs_2operators.html#autotoc_md39", null ],
+        [ "Hamiltonian Construction Utilities", "md__2_users_2christoph_2github_2local__information_2docs_2operators.html#autotoc_md46", null ],
+        [ "Lindbladian Construction Utilities", "md__2_users_2christoph_2github_2local__information_2docs_2operators.html#autotoc_md47", null ]
       ] ],
       [ "Hamiltonian", "md__2_users_2christoph_2github_2local__information_2docs_2operators.html#hamiltonian", [
-        [ "Usage Example", "md__2_users_2christoph_2github_2local__information_2docs_2operators.html#autotoc_md52", null ]
+        [ "Usage Example", "md__2_users_2christoph_2github_2local__information_2docs_2operators.html#autotoc_md53", null ]
       ] ],
       [ "Lindbladian", "md__2_users_2christoph_2github_2local__information_2docs_2operators.html#lindbladian", [
-        [ "Usage Example", "md__2_users_2christoph_2github_2local__information_2docs_2operators.html#autotoc_md58", null ]
+        [ "Usage Example", "md__2_users_2christoph_2github_2local__information_2docs_2operators.html#autotoc_md59", null ]
       ] ]
     ] ],
     [ "State", "state.html", [
-      [ "Overview", "state.html#autotoc_md59", [
-        [ "State Construction Patterns", "state.html#autotoc_md60", null ]
+      [ "Overview", "state.html#autotoc_md60", [
+        [ "State Construction Patterns", "state.html#autotoc_md61", null ]
       ] ],
-      [ "", "state.html#autotoc_md61", null ],
-      [ "Saving and Loading Checkpoints", "state.html#autotoc_md62", null ],
-      [ "Properties and Methods", "state.html#autotoc_md64", [
-        [ "Properties", "state.html#autotoc_md65", null ],
-        [ "State Creation", "state.html#autotoc_md66", null ],
-        [ "Checkpointing", "state.html#autotoc_md67", null ],
-        [ "Hierarchy and Information", "state.html#autotoc_md68", null ],
-        [ "System Manipulation", "state.html#autotoc_md69", null ],
-        [ "Utility", "state.html#autotoc_md70", null ]
+      [ "", "state.html#autotoc_md62", null ],
+      [ "Saving and Loading Checkpoints", "state.html#autotoc_md63", null ],
+      [ "Properties and Methods", "state.html#autotoc_md65", [
+        [ "Properties", "state.html#autotoc_md66", null ],
+        [ "State Creation", "state.html#autotoc_md67", null ],
+        [ "Checkpointing", "state.html#autotoc_md68", null ],
+        [ "Hierarchy and Information", "state.html#autotoc_md69", null ],
+        [ "System Manipulation", "state.html#autotoc_md70", null ],
+        [ "Utility", "state.html#autotoc_md71", null ]
       ] ],
-      [ "Example Usage", "state.html#autotoc_md72", null ]
-    ] ],
-    [ "TODOs", "md__2_users_2christoph_2github_2local__information_2docs_2todo.html", null ]
+      [ "Example Usage", "state.html#autotoc_md73", null ]
+    ] ]
   ] ]
 ];
 

@@ -7,7 +7,7 @@ import sys
 from dataclasses import dataclass
 from importlib import import_module
 from pathlib import Path
-from typing import Callable, List, AnyStr, Dict, Any
+from typing import List, AnyStr, Dict, Any
 from typing import Union
 
 import yaml
@@ -69,7 +69,10 @@ class DataConfig:
 
     @classmethod
     def from_yaml(cls, folder: str, full_module_path: str = "") -> DataConfig:
-        """initialize config from yaml"""
+        """
+        Initialize config from yaml. full_module_path is the full path to the module 
+        where observables are defined.
+        """
         p = Path(folder)
         config_path = p / "data_config.yaml"
 

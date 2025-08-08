@@ -12,5 +12,5 @@ var searchData=
   ['operators_20observables_20and_20data_20handling_9',['Operators, observables and data handling',['../index.html#autotoc_md30',1,'']]],
   ['operators_2emd_10',['operators.md',['../operators_8md.html',1,'']]],
   ['out_20the_20examples_11',['Check out the examples',['../index.html#autotoc_md36',1,'']]],
-  ['overview_12',['Overview',['../state.html#autotoc_md59',1,'']]]
+  ['overview_12',['Overview',['../state.html#autotoc_md60',1,'']]]
 ];

@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.10.0"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Local Information Time Evolution (LITE): Related Pages</title>
+<title>Local Information Time Evolution (LITE): Multiprocessing and Multithreading</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -73,7 +73,7 @@ $(function() {
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(function(){initNavTree('pages.html',''); initResizable(); });
+$(function(){initNavTree('md__2_users_2christoph_2github_2local__information_2docs_2multiprocessing.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -98,20 +98,18 @@ $(function(){initNavTree('pages.html',''); initResizable(); });
 </div>
 </div>
 
-<div class="header">
-  <div class="headertitle"><div class="title">Related Pages</div></div>
+<div><div class="header">
+  <div class="headertitle"><div class="title">Multiprocessing and Multithreading</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock">Here is a list of all related documentation pages:</div><div class="directory">
-<table class="directory">
-<tr id="row_0_" class="even"><td class="entry"><span style="width:16px;display:inline-block;">&#160;</span><a class="el" href="md__2_users_2christoph_2github_2local__information_2docs_2config.html" target="_self">Configuration and Logging Infrastructure</a></td><td class="desc"></td></tr>
-<tr id="row_1_" class="odd"><td class="entry"><span style="width:16px;display:inline-block;">&#160;</span><a class="el" href="md__2_users_2christoph_2github_2local__information_2docs_2multiprocessing.html" target="_self">Multiprocessing and Multithreading</a></td><td class="desc"></td></tr>
-<tr id="row_2_" class="even"><td class="entry"><span style="width:16px;display:inline-block;">&#160;</span><a class="el" href="observables.html" target="_self">Observables</a></td><td class="desc"></td></tr>
-<tr id="row_3_" class="odd"><td class="entry"><span style="width:16px;display:inline-block;">&#160;</span><a class="el" href="md__2_users_2christoph_2github_2local__information_2docs_2operators.html" target="_self">Operator</a></td><td class="desc"></td></tr>
-<tr id="row_4_" class="even"><td class="entry"><span style="width:16px;display:inline-block;">&#160;</span><a class="el" href="state.html" target="_self">State</a></td><td class="desc"></td></tr>
-</table>
-</div><!-- directory -->
-</div><!-- contents -->
+<div class="textblock"><p><a class="anchor" id="autotoc_md37"></a>Time evolution via LITE naturally suggest the use of multiprocessing. The computational heavy lifting mostly relsted to diagonalisation of density matrices of subsystems can be parallelized.</p>
+<p>To use multiprocessing run your script with </p><div class="fragment"><div class="line">$ mpirun -n MY_NUMBER_OF_PROCESSES python MY_SCRIPT.py</div>
+</div><!-- fragment --><p> to run any script. This will start <code>MY_NUMBER_OF_PROCESSES</code> many processes on your machine. If the system is large, this can be profitable since every time evolution step requires many (independent) diagonalizations (For details check out our <a href="https://arxiv.org/pdf/2310.06036">recent work</a>).</p>
+<p>Moreover, many internal routines allow for multithreading to speed up calculations. To enable multithreading add </p><div class="fragment"><div class="line"><span class="keyword">import</span> os</div>
+<div class="line">os.environ[<span class="stringliteral">&quot;OMP_NUM_THREADS&quot;</span>] = <span class="stringliteral">&quot;MY_NUMBER_OF_THREADS&quot;</span></div>
+</div><!-- fragment --><p> to the top of your python script for <code>MY_NUMBER_OF_THREADS</code> threads. Multithreading does not collide with multiprocessing. </p>
+</div></div><!-- contents -->
+</div><!-- PageDoc -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
