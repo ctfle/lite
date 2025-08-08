@@ -46,7 +46,7 @@ class Operator:
         self.name = name
 
     def expectation_value(self, rho_dict: LatticeDict) -> tuple[LatticeDict, float]:
-        """!
+        """
         Computes the expectation value with respect to the state of the system given by `rho_dict`
         """
         # take the largest length scale of operators couplings
@@ -96,7 +96,7 @@ class Operator:
 
     @cached_property
     def operator(self) -> LatticeDict:
-        """!
+        """
         Constructs all local Hamiltonians at scale of 'range' and stores
         the result as csr matrix in a lattice dict
         """
@@ -194,7 +194,7 @@ def setup_element(value: Number, j: int, rng: int) -> list:
 def check_hamiltonian(
     operator_couplings: Coupling, allowed_strings: list
 ) -> tuple[int, Coupling]:
-    """!
+    """
     Check if input Hamiltonian is of right form.
     """
     range_ = 0
@@ -226,7 +226,7 @@ def check_hamiltonian(
 def construct_operator_dict(
     operator_couplings: Coupling, max_l: int, range_: int, system_size: int
 ) -> LatticeDict:
-    """!
+    """
     Constructs all Hamiltonians up to max_l + range and stores the result as csr matrix in a lattice dict.
     """
     ##
@@ -237,7 +237,6 @@ def construct_operator_dict(
     # @param anchor parameter to anchor the build of the Hamiltonian. Default is 0.
     # This means the 0th index in the Hamiltonian coupling list will be used for the density matrix with key (n=0,l=0).
     # For asymptotic invariant systems anchor is typically not zero.
-    #
 
     hamiltonian_dict = LatticeDict()
 
@@ -256,7 +255,7 @@ def construct_operator_dict(
 def construct_hamiltonian(
     n_max: int, operator_couplings: Coupling, n_min: int = 0
 ) -> hamiltonian:
-    """!
+    """
     Constructs the Hamiltonian on the operators defined from the sites n_min to n_max.
     """
     ##
@@ -266,7 +265,6 @@ def construct_hamiltonian(
     # string that characterizes the coupling type ('x', 'y', 'z', '1')
     # For instance: [['z',h],['zz',J]]. J and h can be lists themselves
     # @param n_min minimum site to construct the Hamiltonian. Default is 0
-    #
 
     # quspin basis object
     basis = spin_basis_1d(L=int(n_max - n_min), pauli=True)
@@ -285,7 +283,7 @@ def construct_hamiltonian(
 
 
 def get_couplings(operator_couplings: Coupling, n_max: int, n_min: int) -> Coupling:
-    """!
+    """
     Computes all operators couplings in quspin-readable form from the input list operator_couplings
     """
     couplings = []
@@ -317,13 +315,12 @@ def get_couplings(operator_couplings: Coupling, n_max: int, n_min: int) -> Coupl
 
 
 def compute_HH_commutator(H_n_dict: LatticeDict, key: tuple) -> LatticeDict:
-    """!
+    """
     Function to compute the commutator of the local Hamiltonian with key=(n,ell)
     """
     ##
     # @param H_n_dict Hamiltonian in dict form: each key corresponds to one element H^ell_n
     # @param key for which to compute the commutator, i.e., key -> h^ell_n to compute [H,h^ell_n]
-    #
 
     # range of Hamiltonian + range of operator + 1
     n, ell = key
@@ -363,7 +360,7 @@ def compute_HH_commutator(H_n_dict: LatticeDict, key: tuple) -> LatticeDict:
 
 
 def compute_H_onsite_operator_commutator(H_n_dict, operator_dict, key, range_):
-    """!
+    """
     Function to compute the commutator of the Hamiltonian with an onsite
     Operator at key=(n,ell)
     """
@@ -397,7 +394,7 @@ def compute_H_onsite_operator_commutator(H_n_dict, operator_dict, key, range_):
 
 
 def add_spins(operator, number, orientation: str):
-    """!
+    """
     Adds identity at given orientation
     """
     ##
@@ -424,7 +421,7 @@ def add_spins(operator, number, orientation: str):
 def check_lindbladian(
     jump_couplings: Coupling, allowed_strings: list
 ) -> tuple[int, list, Coupling]:
-    """!
+    """
     Check if input for Lindbladian is of right form
     """
     range_ = 0
@@ -462,7 +459,7 @@ def check_lindbladian(
 def construct_lindbladian_dict(
     jump_couplings: Coupling, max_l: int, range_: int, system_size: int
 ) -> Dict:
-    """!
+    """
     Constructs a dictionary that holds the information which on-site Lindblad operator to apply where
     """
     lindbladian_dict = dict()
@@ -482,7 +479,7 @@ def construct_lindbladian_dict(
 def construct_lindbladian_id(
     n_max: int, jump_couplings: Coupling, n_min: int = 0
 ) -> list:
-    """!
+    """
     Construct the Lindbladian id for the operators from n_min to n_max.
     """
 
@@ -504,7 +501,7 @@ def construct_lindbladian_id(
 
 
 def setup_onsite_L_operators(max_l: int, range_: int, type_list: list) -> LatticeDict:
-    """!
+    """
     Construct all basic onsite Lindblad operators up to level max_l + range_. Keys are tuples of length 3:
     (extend, m, type) where m is the site where the operator acts, extend: over which we construct the operator,
     type: what kind of operator. I.e. generates a LatticeDict with all possible single particle Lindblad operators
