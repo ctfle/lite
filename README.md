@@ -30,4 +30,4 @@ For manual installation, install the below packages
 + [pyyaml](https://pypi.org/project/pyaml/)
 
 ## Read the intro and check the examples
-Read [here]((https://ctfle.github.io/lite/)) how to use LITE and check out some [examples](https://github.com/ctfle/lite/tree/main/examples).
+Read [here](https://ctfle.github.io/lite/) how to use LITE and check out some [examples](https://github.com/ctfle/lite/tree/main/examples).
