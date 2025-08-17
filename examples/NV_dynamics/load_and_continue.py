@@ -10,3 +10,9 @@ system = OpenSystem.from_checkpoint(
     folder=checkpoint_folder,
     module_path=working_dir + "/nv_gradient_field_diffusion.py",
 )
+
+steps = 200
+for i in range(steps):
+    system.evolve(max_evolution_time=4.0, final_time=True)
+    print(f"finished cycle {i} of {steps}")
+    system.solver.step_size = 0.25

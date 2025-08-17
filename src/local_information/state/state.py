@@ -227,7 +227,7 @@ class State:
             meta_data = StateMetaData(**loaded)
         else:
             raise FileNotFoundError(f"no file available in {state_filepath}")
-        logger.info(f"loaded checkpoint from {folder}")
+        logger.info(f"loaded State from {folder}")
 
         return cls(
             rho_dict,

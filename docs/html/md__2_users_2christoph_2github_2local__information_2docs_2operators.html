@@ -102,8 +102,8 @@ $(function(){initNavTree('md__2_users_2christoph_2github_2local__information_2do
   <div class="headertitle"><div class="title">Operator</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md38"></a> Encapsulates a quantum operator, its couplings, and the ability to auto-generate block Hamiltonians at different locations and length scales. Tracks operator range, system size, optional disorder, and provides various convenience methods for operator algebra and property introspection.</p>
-<h2><a class="anchor" id="autotoc_md39"></a>
+<div class="textblock"><p><a class="anchor" id="autotoc_md39"></a> Encapsulates a quantum operator, its couplings, and the ability to auto-generate block Hamiltonians at different locations and length scales. Tracks operator range, system size, optional disorder, and provides various convenience methods for operator algebra and property introspection.</p>
+<h2><a class="anchor" id="autotoc_md40"></a>
 Initialization</h2>
 <div class="fragment"><div class="line">Operator(operator_couplings: Coupling, name: Optional[str]=<span class="keywordtype">None</span>)</div>
 </div><!-- fragment --><ul>
@@ -111,7 +111,7 @@ Initialization</h2>
 <li><b>name</b>: Optional label for easy identification.</li>
 </ul>
 <hr  />
- <h1><a class="anchor" id="autotoc_md41"></a>
+ <h1><a class="anchor" id="autotoc_md42"></a>
 Methods</h1>
 <ul>
 <li><code>expectation_value(rho_dict: LatticeDict) -&gt; (LatticeDict, float)</code>: Computes the expectation value for the operator with respect to a dictionary of density matrices. Returns: A dictionary with local expectation values and the total (summed) expectation value.</li>
@@ -121,7 +121,7 @@ Methods</h1>
 <li><code>__eq__</code>: Compares Operators by their coupling definitions.</li>
 </ul>
 <hr  />
- <h1><a class="anchor" id="autotoc_md43"></a>
+ <h1><a class="anchor" id="autotoc_md44"></a>
 Example Usage</h1>
 <div class="fragment"><div class="line"><span class="keyword">from</span> local_information.operator_module <span class="keyword">import</span> Operator, construct_operator_dict</div>
 <div class="line"> </div>
@@ -137,9 +137,9 @@ Example Usage</h1>
 <div class="line"><span class="comment"># Compute expectation value w.r.t. a supplied density matrix LatticeDict</span></div>
 <div class="line">expt_dict, total_expt = op.expectation_value(rho_dict)</div>
 </div><!-- fragment --> <hr  />
- <h1><a class="anchor" id="autotoc_md45"></a>
+ <h1><a class="anchor" id="autotoc_md46"></a>
 Additional functions provided</h1>
-<h2><a class="anchor" id="autotoc_md46"></a>
+<h2><a class="anchor" id="autotoc_md47"></a>
 Hamiltonian Construction Utilities</h2>
 <p>These functions automate the creation and assembly of Hamiltonians at all relevant levels/hierarchies:</p>
 <ul>
@@ -150,7 +150,7 @@ Hamiltonian Construction Utilities</h2>
 <li><code>compute_H_onsite_operator_commutator(...)</code>: Computes the commutator of the Hamiltonian with a single-site operator.</li>
 <li><code>add_spins(operator, number, orientation)</code>: Enlarges an operator by adding identity operators (<code>I</code>) on the left or right, growing its Hilbert space appropriately (via Kronecker products). Used for alignment of operators and Hilbert spaces.</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md47"></a>
+<h2><a class="anchor" id="autotoc_md48"></a>
 Lindbladian Construction Utilities</h2>
 <p>Functions for open-system quantum systems, where you may have local or structured dissipators ("Lindblad operators"):</p>
 <ul>
@@ -163,14 +163,14 @@ Lindbladian Construction Utilities</h2>
  <h1><a class="anchor" id="hamiltonian"></a>
 Hamiltonian</h1>
 <p>The <code>Hamiltonian</code> class extends the generic <code>Operator</code> class to represent a Hamiltonian constructed from local couplings, organized as <code>LatticeDict</code> structures holding subsystem Hamiltonians. These data structures support hierarchical decompositions up to a maximum correlation length <code>max_l</code>.</p>
-<h3><a class="anchor" id="autotoc_md49"></a>
+<h3><a class="anchor" id="autotoc_md50"></a>
 Initialization</h3>
 <div class="fragment"><div class="line">Hamiltonian(max_l: int, hamiltonian_couplings: Coupling)</div>
 </div><!-- fragment --><ul>
 <li><b>max_l</b>: The maximum hierarchical correlation length (level). All local Hamiltonians are constructed up to (including) <code>max_l + range_of_couplings</code> so that local time-evoultion can be performed up to level <code>max_l</code>.</li>
 <li><b>hamiltonian_couplings</b>: Input list of local Hamiltonian couplings describing the system.</li>
 </ul>
-<h3><a class="anchor" id="autotoc_md50"></a>
+<h3><a class="anchor" id="autotoc_md51"></a>
 Attributes</h3>
 <ul>
 <li><code>max_l</code>: Maximum hierarchical level (correlation length) local operators are available for local time-evolution.</li>
@@ -181,12 +181,12 @@ Attributes</h3>
 <blockquote class="doxtable">
 <p>&zwj;Note: The full Hamiltonian of the system can be reconstructed by summing values in the <code>operator</code> property. The <code>subsystem_hamiltonian</code> attribute contains overlapping subsystem Hamiltonians, which do <b>not</b> sum up to the full Hamiltonian due to overlap. </p>
 </blockquote>
-<h3><a class="anchor" id="autotoc_md51"></a>
+<h3><a class="anchor" id="autotoc_md52"></a>
 Properties</h3>
 <ul>
 <li><code>energy_current</code>: A cached property that computes the commutator of the Hamiltonian with each local operator element of the Hamiltonian itself. It returns a dictionary mapping keys (location and level) to commutator <code>LatticeDict</code>s.</li>
 </ul>
-<h3><a class="anchor" id="autotoc_md52"></a>
+<h3><a class="anchor" id="autotoc_md53"></a>
 Methods</h3>
 <ul>
 <li><code>operator_current(operator: Operator) -&gt; dict[LatticeDict]</code>: Computes the commutator of the Hamiltonian with <em>each element</em> of a given <b>onsite</b> operator.</li>
@@ -194,7 +194,7 @@ Methods</h3>
 <li><code>from_checkpoint(folder: str) -&gt; Hamiltonian</code>: Class method to load a Hamiltonian object from a checkpoint directory.</li>
 <li><code>__eq__</code>: Two Hamiltonians are equal if their <code>operator</code> arrays are identical (same matrix elements) and their <code>max_l</code> values match.</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md53"></a>
+<h2><a class="anchor" id="autotoc_md54"></a>
 Usage Example</h2>
 <div class="fragment"><div class="line"><span class="keyword">from</span> local_information.operators.hamiltonian <span class="keyword">import</span> Hamiltonian</div>
 <div class="line"> </div>
@@ -216,7 +216,7 @@ Usage Example</h2>
  <h1><a class="anchor" id="lindbladian"></a>
 Lindbladian</h1>
 <p>The <code>Lindbladian</code> class extends the generic <code>Operator</code> class to represent an <b>open quantum system’s Lindbladian operator</b>, incorporating both Hamiltonian and dissipative (jump) terms. It organizes the Lindbladian into hierarchical local subsystems stored as <code>LatticeDict</code> objects.</p>
-<h3><a class="anchor" id="autotoc_md55"></a>
+<h3><a class="anchor" id="autotoc_md56"></a>
 Initialization</h3>
 <div class="fragment"><div class="line">Lindbladian(max_l: int, hamiltonian_couplings: Coupling, jump_couplings: Coupling)</div>
 </div><!-- fragment --><ul>
@@ -224,7 +224,7 @@ Initialization</h3>
 <li><b>hamiltonian_couplings</b>: List of coupling terms defining the Hamiltonian part of the Lindbladian.</li>
 <li><b>jump_couplings</b>: List of on-site jump operator couplings describing dissipation.</li>
 </ul>
-<h3><a class="anchor" id="autotoc_md56"></a>
+<h3><a class="anchor" id="autotoc_md57"></a>
 Attributes</h3>
 <ul>
 <li><code>max_l</code>: Maximum hierarchical level (correlation length).</li>
@@ -238,12 +238,12 @@ Attributes</h3>
 <blockquote class="doxtable">
 <p>&zwj;Note: The full Lindbladian of the system can be reconstructed by summing values in the <code>operator</code> property. The <code>subsystem_hamiltonian</code> attribute contains overlapping subsystem Hamiltonians, which do <b>not</b> sum up to the full Hamiltonian due to overlap. </p>
 </blockquote>
-<h3><a class="anchor" id="autotoc_md57"></a>
+<h3><a class="anchor" id="autotoc_md58"></a>
 Properties</h3>
 <ul>
 <li><code>energy_current</code>: A cached property that computes the commutator of the Hamiltonian with each local operator element of the Hamiltonian itself. It returns a dictionary mapping keys (location and level) to commutator <code>LatticeDict</code>s.</li>
 </ul>
-<h3><a class="anchor" id="autotoc_md58"></a>
+<h3><a class="anchor" id="autotoc_md59"></a>
 Methods</h3>
 <ul>
 <li><code>operator_current(operator: Operator) -&gt; dict[LatticeDict]</code>: Computes commutators of the Lindbladian’s Hamiltonian with each local element of an onsite operator.</li>
@@ -252,7 +252,7 @@ Methods</h3>
 <li><code>from_checkpoint(folder: str) -&gt; Lindbladian</code>: Loads a <code>Lindbladian</code> instance from a checkpoint.</li>
 <li><code>__eq__(other)</code>: Checks equality with another <code>Lindbladian</code> instance. Two <code>Lindbladian</code> instances are considered equal if <code>operator</code> matrices, <code>max_l</code> values and <code>L_operators</code> are equal</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md59"></a>
+<h2><a class="anchor" id="autotoc_md60"></a>
 Usage Example</h2>
 <div class="fragment"><div class="line"><span class="keyword">from</span> local_information.operators.lindbladian <span class="keyword">import</span> Lindbladian</div>
 <div class="line"> </div>

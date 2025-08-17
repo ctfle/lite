@@ -98,7 +98,6 @@ x = [1.0 for j in range(L)]
 x_list = [["x", [1.0 for j in range(L)]]]
 x_mag = li.operators.Operator(x_list)
 
-
 def x_magnetization(rho):
     return x_mag.expectation_value(rho)
 
@@ -129,9 +128,10 @@ lindbladian = li.operators.Lindbladian(max_l, hamiltonian_couplings, jump_coupli
 # Define the system from an initial state, a Hamiltonian/ Lindbladian and the config's
 system = li.OpenSystem(initial_state, lindbladian, config=config, data=data)
 
-# the main time-evolution loop. Observables and state are checkpointed after each iteration
-steps = 200
-for i in range(steps):
-    system.evolve(max_evolution_time=4.0, final_time=True)
-    print(f"finished cycle {i} of {steps}")
-    system.solver.step_size = 0.25
+if __name__ == "__main__":
+    # the main time-evolution loop. Observables and state are checkpointed after each iteration
+    steps = 200
+    for i in range(steps):
+        system.evolve(max_evolution_time=4.0, final_time=True)
+        print(f"finished cycle {i} of {steps}")
+        system.solver.step_size = 0.25

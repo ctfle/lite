@@ -150,5 +150,54 @@ This will evolve the state up to time \f$10 \times 2.0\f$ (this would also work
 setting ```max_evolution_time=20.0``` however the above iterative version has
 the advantage that data gets checkpointed after each iteration).
 
-## Check out the examples
+# Save and load checkpoints
+[TimeEvolutionConfig](@ref time_evolution_config) lets you specify `save_checkpoint` to save data (values of measured observables etc.) as well as all information to about the evolved system (local density matrices, Hamiltonian etc.). A system can be initialized from a checkpoint and the evolution can be continued. This requires the path of the checkpoint and, if custom obesrvables are used, the absolute path to the module where the corresponding observable is defined.
+
+> Note: Make sure the script where you define observables is import save, meaning anything that you
+> want to run is wrapped in >``` if __name__ == "__main__": ```
+
+Here is an in example code snippet. Define your observable in `my_script.py`
+```python 
+...
+
+# directory to store the data
+checkpoint_folder = f"./data/my_data"
+
+# A TimeEvolutionConfig where all parameters relevant for time evolution are set
+config = li.config.TimeEvolutionConfig(
+    save_checkpoint=True,
+    checkpoint_folder=checkpoint_folder,
+)
+
+# Definition of an x-magnetization
+x = [1.0 for j in range(L)]
+x_list = [["x", [1.0 for j in range(L)]]]
+x_mag = li.operators.Operator(x_list)
+
+def x_magnetization(rho):
+    return x_mag.expectation_value(rho)
+
+if __name__ == "__main__": 
+    ...
+    # your main time-evolution loop
+    
+```
+
+Use another script `load.py` to load the `System`
+
+```python 
+...
+
+# directory to load the dat from
+checkpoint_folder = f"./data/my_data"
+
+working_dir = Path(__file__).parent.resolve().as_posix()
+system = OpenSystem.from_checkpoint(
+    folder=checkpoint_folder,
+    module_path=working_dir + "full/path/to/my_script.py",
+)
+    
+```
+
+## TL,DR -> Check out the examples
 TL;DR check out the [examples](https://github.com/ctfle/lite/tree/main/examples).

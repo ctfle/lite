@@ -98,7 +98,7 @@ class Hamiltonian(Operator):
 
         else:
             raise FileNotFoundError(f"no file available in {hamiltonian_filepath}")
-        logger.info(f"loaded checkpoint from {folder}")
+        logger.info(f"loaded Hamiltonian from {folder}")
 
         return cls(max_l=meta_data.max_l, hamiltonian_couplings=hamiltonian_couplings)
 

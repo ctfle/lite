@@ -186,7 +186,46 @@ Closed and Open Systems</h1>
 <div class="line">    system.evolve(max_evolution_time=2.0, final_time=<span class="keyword">True</span>)</div>
 </div><!-- fragment --><p> This will evolve the state up to time \(10 \times 2.0\) (this would also work setting <code>max_evolution_time=20.0</code> however the above iterative version has the advantage that data gets checkpointed after each iteration).</p>
 <h1><a class="anchor" id="autotoc_md36"></a>
-Check out the examples</h1>
+Save and load checkpoints</h1>
+<p><a class="el" href="md__2_users_2christoph_2github_2local__information_2docs_2config.html#time_evolution_config">TimeEvolutionConfig</a> lets you specify <code>save_checkpoint</code> to save data (values of measured observables etc.) as well as all information to about the evolved system (local density matrices, Hamiltonian etc.). A system can be initialized from a checkpoint and the evolution can be continued. This requires the path of the checkpoint and, if custom obesrvables are used, the absolute path to the module where the corresponding observable is defined.</p>
+<blockquote class="doxtable">
+<p>&zwj;Note: Make sure the script where you define observables is import save, meaning anything that you want to run is wrapped in &gt;<code>if __name__ == "__main__":</code> </p>
+</blockquote>
+<p>Here is an in example code snippet. Define your observable in <code>my_script.py</code> </p><div class="fragment"><div class="line">...</div>
+<div class="line"> </div>
+<div class="line"><span class="comment"># directory to store the data</span></div>
+<div class="line">checkpoint_folder = f<span class="stringliteral">&quot;./data/my_data&quot;</span></div>
+<div class="line"> </div>
+<div class="line"><span class="comment"># A TimeEvolutionConfig where all parameters relevant for time evolution are set</span></div>
+<div class="line">config = li.config.TimeEvolutionConfig(</div>
+<div class="line">    save_checkpoint=<span class="keyword">True</span>,</div>
+<div class="line">    checkpoint_folder=checkpoint_folder,</div>
+<div class="line">)</div>
+<div class="line"> </div>
+<div class="line"><span class="comment"># Definition of an x-magnetization</span></div>
+<div class="line">x = [1.0 <span class="keywordflow">for</span> j <span class="keywordflow">in</span> range(L)]</div>
+<div class="line">x_list = [[<span class="stringliteral">&quot;x&quot;</span>, [1.0 <span class="keywordflow">for</span> j <span class="keywordflow">in</span> range(L)]]]</div>
+<div class="line">x_mag = li.operators.Operator(x_list)</div>
+<div class="line"> </div>
+<div class="line"><span class="keyword">def </span>x_magnetization(rho):</div>
+<div class="line">    <span class="keywordflow">return</span> x_mag.expectation_value(rho)</div>
+<div class="line"> </div>
+<div class="line"><span class="keywordflow">if</span> __name__ == <span class="stringliteral">&quot;__main__&quot;</span>: </div>
+<div class="line">    ...</div>
+<div class="line">    <span class="comment"># your main time-evolution loop</span></div>
+</div><!-- fragment --><p>Use another script <code>load.py</code> to load the <code>System</code></p>
+<div class="fragment"><div class="line">...</div>
+<div class="line"> </div>
+<div class="line"><span class="comment"># directory to load the dat from</span></div>
+<div class="line">checkpoint_folder = f<span class="stringliteral">&quot;./data/my_data&quot;</span></div>
+<div class="line"> </div>
+<div class="line">working_dir = Path(__file__).parent.resolve().as_posix()</div>
+<div class="line">system = OpenSystem.from_checkpoint(</div>
+<div class="line">    folder=checkpoint_folder,</div>
+<div class="line">    module_path=working_dir + <span class="stringliteral">&quot;full/path/to/my_script.py&quot;</span>,</div>
+<div class="line">)</div>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md37"></a>
+TL,DR -&gt; Check out the examples</h2>
 <p>TL;DR check out the <a href="https://github.com/ctfle/lite/tree/main/examples">examples</a>. </p>
 </div></div><!-- PageDoc -->
 <a href="doxygen_crawl.html"/>

@@ -126,7 +126,7 @@ class Lindbladian(Operator):
 
         else:
             raise FileNotFoundError(f"no file available in {filepath}")
-        logger.info(f"loaded checkpoint from {folder}")
+        logger.info(f"loaded Lindbladian from {folder}")
 
         return cls(
             max_l=meta_data.max_l,

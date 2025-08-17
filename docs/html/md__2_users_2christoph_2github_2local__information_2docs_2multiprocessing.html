@@ -102,9 +102,9 @@ $(function(){initNavTree('md__2_users_2christoph_2github_2local__information_2do
   <div class="headertitle"><div class="title">Multiprocessing and Multithreading</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md37"></a>Time evolution via LITE naturally suggest the use of multiprocessing. The computational heavy lifting mostly relsted to diagonalisation of density matrices of subsystems can be parallelized.</p>
+<div class="textblock"><p><a class="anchor" id="autotoc_md38"></a>Time evolution via LITE naturally suggest the use of multiprocessing. The computational heavy lifting mostly relsted to diagonalisation of density matrices of subsystems can be parallelized.</p>
 <p>To use multiprocessing run your script with </p><div class="fragment"><div class="line">$ mpirun -n MY_NUMBER_OF_PROCESSES python MY_SCRIPT.py</div>
-</div><!-- fragment --><p> to run any script. This will start <code>MY_NUMBER_OF_PROCESSES</code> many processes on your machine. If the system is large, this can be profitable since every time evolution step requires many (independent) diagonalizations (For details check out our <a href="https://arxiv.org/pdf/2310.06036">recent work</a>).</p>
+</div><!-- fragment --><p> to run any script. This will start <code>MY_NUMBER_OF_PROCESSES</code> many processes on your machine. If the system is large, this can be profitable since every time evolution step requires many (independent) diagonalizations (for details check out our <a href="https://arxiv.org/pdf/2310.06036">recent work</a>).</p>
 <p>Moreover, many internal routines allow for multithreading to speed up calculations. To enable multithreading add </p><div class="fragment"><div class="line"><span class="keyword">import</span> os</div>
 <div class="line">os.environ[<span class="stringliteral">&quot;OMP_NUM_THREADS&quot;</span>] = <span class="stringliteral">&quot;MY_NUMBER_OF_THREADS&quot;</span></div>
 </div><!-- fragment --><p> to the top of your python script for <code>MY_NUMBER_OF_THREADS</code> threads. Multithreading does not collide with multiprocessing. </p>

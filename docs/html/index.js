@@ -15,5 +15,7 @@ var index =
       [ "DataContainer", "index.html#autotoc_md34", null ]
     ] ],
     [ "Closed and Open Systems", "index.html#autotoc_md35", null ],
-    [ "Check out the examples", "index.html#autotoc_md36", null ]
+    [ "Save and load checkpoints", "index.html#autotoc_md36", [
+      [ "TL,DR -> Check out the examples", "index.html#autotoc_md37", null ]
+    ] ]
 ];
