@@ -3,20 +3,14 @@ from sys import stdout
 from mpi4py import MPI
 
 
-def get_mpi_variables():
-    COMM = MPI.COMM_WORLD
-    RANK = COMM.Get_rank()
-    SIZE = COMM.Get_size()
-    NAME = MPI.Get_processor_name()
+COMM = MPI.COMM_WORLD
+RANK = COMM.Get_rank()
+SIZE = COMM.Get_size()
+NAME = MPI.Get_processor_name()
 
-    PARALLEL = True
-    if SIZE == 1:
-        PARALLEL = False
-
-    return COMM, RANK, SIZE, NAME, PARALLEL
-
-
-COMM, RANK, SIZE, NAME, PARALLEL = get_mpi_variables()
+PARALLEL = True
+if SIZE == 1:
+    PARALLEL = False
 
 
 def print_mpi(rank: int, message):
