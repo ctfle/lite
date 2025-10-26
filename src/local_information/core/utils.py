@@ -15,10 +15,9 @@ from local_information.core.petz_map import (
 )
 from local_information.lattice.lattice_dict import LatticeDict
 from local_information.mpi.mpi import MultiProcessing
-from local_information.mpi.mpi_funcs import get_mpi_variables
+from local_information.mpi.mpi_setup import COMM, RANK
 
 logger = logging.getLogger()
-COMM, RANK, SIZE, NAME, PARALLEL = get_mpi_variables()
 
 
 @MultiProcessing(shift=1)

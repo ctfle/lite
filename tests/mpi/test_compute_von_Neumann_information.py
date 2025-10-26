@@ -8,13 +8,12 @@ from local_information.core.utils import (
     get_higher_level_single_processing,
 )
 from local_information.lattice.lattice_dict import LatticeDict
-from local_information.mpi.mpi_funcs import get_mpi_variables
+from local_information.mpi.mpi_setup import RANK
 
-COMM, RANK, SIZE, NAME, PARALLEL = get_mpi_variables()
 
 np.random.seed(42)
 
-# to tests run `mpirun -n 2 python -m pytest --with-mpi test_compute_von_Neumann_information.py`
+# to test run `mpirun -n 2 python -m pytest --with-mpi test_compute_von_Neumann_information.py`
 
 
 class TestGetHigherLevel:

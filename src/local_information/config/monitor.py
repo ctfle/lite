@@ -16,7 +16,7 @@ from cattrs import structure, unstructure, Converter
 from cattrs.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
 from local_information.lattice.lattice_dict import LatticeDict
-from local_information.mpi.mpi_funcs import get_mpi_variables
+from local_information.mpi.mpi_setup import RANK
 
 from local_information.typedefs import SystemOperator
 from local_information.operators.observables import (
@@ -27,8 +27,6 @@ from local_information.operators.observables import (
 from local_information.state.state import State
 
 logger = logging.getLogger()
-
-COMM, RANK, SIZE, NAME, PARALLEL = get_mpi_variables()
 
 
 @define

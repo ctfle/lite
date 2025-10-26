@@ -11,9 +11,7 @@ from numpy.typing import ArrayLike
 from scipy import sparse
 
 from local_information.lattice.protocols import Arithmetics
-from local_information.mpi.mpi_funcs import get_mpi_variables
-
-COMM, RANK, SIZE, NAME, PARALLEL = get_mpi_variables()
+from local_information.mpi.mpi_setup import COMM, RANK
 
 logger = logging.getLogger()
 Matrix = Union[np.ndarray, sparse.csr_matrix, sparse.csc_matrix, list, tuple]

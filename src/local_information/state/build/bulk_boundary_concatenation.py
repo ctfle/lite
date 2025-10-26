@@ -3,10 +3,7 @@ from __future__ import annotations
 from local_information.core.utils import compute_lower_level_sparse, align_to_level
 from local_information.lattice.lattice_dict import LatticeDict
 from local_information.state.build.build_finite_state import increment_level_from_to
-from typing import TYPE_CHECKING, Sequence
-
-if TYPE_CHECKING:
-    pass
+from typing import Sequence
 
 
 def concatenate_bulk_and_boundaries(

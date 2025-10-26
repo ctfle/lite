@@ -10,12 +10,9 @@ from local_information.core.utils import (
     compute_lower_level_sparse,
 )
 from local_information.core.petz_map import PetzMap
-from local_information.mpi.mpi_funcs import get_mpi_variables
 from typing import Sequence
 
 logger = logging.getLogger()
-COMM, RANK, SIZE, NAME, PARALLEL = get_mpi_variables()
-
 
 def get_finite_state(
     density_matrix_sequence: Sequence[np.ndarray], max_l: int

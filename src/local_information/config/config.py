@@ -9,10 +9,9 @@ from pathlib import Path
 import yaml
 from cattrs import structure
 
-from local_information.mpi.mpi_funcs import get_mpi_variables
+from local_information.mpi.mpi_setup import RANK, SIZE, NAME
 
 logger = logging.getLogger()
-COMM, RANK, SIZE, NAME, PARALLEL = get_mpi_variables()
 
 
 @dataclass

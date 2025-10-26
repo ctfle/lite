@@ -10,7 +10,6 @@ from typing import TYPE_CHECKING
 import yaml
 
 from local_information.lattice.lattice_dict import LatticeDict
-from local_information.mpi.mpi_funcs import get_mpi_variables
 from local_information.operators.operator import (
     construct_operator_dict,
     construct_lindbladian_dict,
@@ -26,7 +25,6 @@ if TYPE_CHECKING:
     from local_information.typedefs import Coupling
 
 logger = logging.getLogger()
-COMM, RANK, SIZE, NAME, PARALLEL = get_mpi_variables()
 
 
 class Lindbladian(Operator):

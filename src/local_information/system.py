@@ -12,14 +12,13 @@ from local_information.config.monitor import DataContainer
 from local_information.core.minimization.minimization import InformationMinimizer
 from local_information.core.utils import push_keys, one_shift, Trigger, Status
 from local_information.lattice.lattice_dict import LatticeDict
-from local_information.mpi.mpi_funcs import get_mpi_variables
+from local_information.mpi.mpi_setup import COMM, RANK
 from local_information.state.state import State
 
 if TYPE_CHECKING:
     from local_information.typedefs import Solver, SystemOperator
 
 logger = logging.getLogger()
-COMM, RANK, SIZE, NAME, PARALLEL = get_mpi_variables()
 
 
 class System(ABC):

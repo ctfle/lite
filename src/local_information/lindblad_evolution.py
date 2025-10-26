@@ -11,13 +11,12 @@ from local_information.core.runge_kutta_solvers.remote_runge_kutta import (
     RemoteLindbladRungeKuttaSolver,
 )
 from local_information.core.minimization.minimization import InformationMinimizer
-from local_information.mpi.mpi_funcs import get_mpi_variables
+from local_information.mpi.mpi_setup import RANK, PARALLEL
 from local_information.operators.lindbladian import Lindbladian
 from local_information.state.state import State
 from local_information.system import System
 
 logger = logging.getLogger()
-COMM, RANK, SIZE, NAME, PARALLEL = get_mpi_variables()
 
 
 class OpenSystem(System):
@@ -111,7 +110,7 @@ class OpenSystem(System):
 
         return cls(init_state=state, lindbladian=lindbladian, config=config, data=data)
 
-    def __str__(self) -> str:
+    def __str__(self) -> str | None:
         if RANK == 0:
             system = "OpenSystem:\n"
             system += super().__str__()

@@ -6,10 +6,9 @@ from local_information.core.minimization.minimization import *
 from local_information.operators.hamiltonian import Hamiltonian
 from local_information.lattice.lattice_dict import LatticeDict
 from local_information.state.state import State
-from local_information.mpi.mpi_funcs import get_mpi_variables
+from local_information.mpi.mpi_setup import COMM, RANK, SIZE, NAME, PARALLEL
 from local_information.mpi.mpi import Distributor
 
-COMM, RANK, SIZE, NAME, PARALLEL = get_mpi_variables()
 
 np.random.seed(42)
 

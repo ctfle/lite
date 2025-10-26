@@ -17,10 +17,9 @@ if TYPE_CHECKING:
     from numbers import Number
     from local_information.typedefs import Coupling
 
-from local_information.mpi.mpi_funcs import get_mpi_variables
+from local_information.mpi.mpi_setup import COMM, RANK
 
 logger = logging.getLogger()
-COMM, RANK, SIZE, NAME, PARALLEL = get_mpi_variables()
 
 
 class Operator:

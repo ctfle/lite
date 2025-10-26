@@ -10,10 +10,9 @@ from local_information.lattice.lattice_dict import LatticeDict
 if TYPE_CHECKING:
     from local_information.typedefs import LatticeDictKeyTuple
 
-from local_information.mpi.mpi_funcs import get_mpi_variables
+from local_information.mpi.mpi_setup import COMM, RANK, SIZE
 
 logger = logging.getLogger()
-COMM, RANK, SIZE, NAME, PARALLEL = get_mpi_variables()
 
 
 class Distributor:

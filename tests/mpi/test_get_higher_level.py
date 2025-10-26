@@ -6,9 +6,8 @@ from local_information.core.utils import (
     get_higher_level,
     get_higher_level_single_processing,
 )
-from local_information.mpi.mpi_funcs import get_mpi_variables
+from local_information.mpi.mpi_setup import RANK
 
-COMM, RANK, SIZE, NAME, PARALLEL = get_mpi_variables()
 
 np.random.seed(42)
 

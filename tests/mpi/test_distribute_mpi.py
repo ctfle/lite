@@ -8,9 +8,8 @@ import pytest
 
 from local_information.lattice.lattice_dict import LatticeDict
 from local_information.mpi.distribute import Distributor
-from local_information.mpi.mpi_funcs import get_mpi_variables, print_mpi
+from local_information.mpi.mpi_setup import RANK, SIZE, print_mpi
 
-COMM, RANK, SIZE, NAME, PARALLEL = get_mpi_variables()
 
 np.random.seed(42)
 

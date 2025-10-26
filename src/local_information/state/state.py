@@ -32,14 +32,13 @@ from local_information.core.utils import (
     ptrace,
     compute_lower_level,
 )
-from local_information.mpi.mpi_funcs import get_mpi_variables
+from local_information.mpi.mpi_setup import COMM, RANK
 from typing import TYPE_CHECKING, Any, Union, Sequence
 
 if TYPE_CHECKING:
     from local_information.typedefs import SystemOperator
 
 logger = logging.getLogger()
-COMM, RANK, SIZE, NAME, PARALLEL = get_mpi_variables()
 
 
 class State:

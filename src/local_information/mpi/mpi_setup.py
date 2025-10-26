@@ -16,6 +16,9 @@ def get_mpi_variables():
     return COMM, RANK, SIZE, NAME, PARALLEL
 
 
+COMM, RANK, SIZE, NAME, PARALLEL = get_mpi_variables()
+
+
 def print_mpi(rank: int, message):
     print(f"RANK {rank}: ", message)
     stdout.flush()

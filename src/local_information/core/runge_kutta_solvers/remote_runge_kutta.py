@@ -6,7 +6,7 @@ from copy import deepcopy
 import numpy as np
 
 from local_information.mpi.mpi import *
-from local_information.mpi.mpi_funcs import get_mpi_variables
+from local_information.mpi.mpi_setup import COMM, RANK
 from local_information.core.utils import commutator
 from local_information.core.utils import get_higher_level
 from local_information.core.petz_map import ptrace
@@ -19,7 +19,6 @@ from local_information.core.utils import anti_commutator
 from local_information.typedefs import SystemOperator
 
 logger = logging.getLogger()
-COMM, RANK, SIZE, NAME, PARALLEL = get_mpi_variables()
 
 
 class RemoteRungeKuttaSolver(RungeKuttaSolver):

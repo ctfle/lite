@@ -1,19 +1,14 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
 
 import numpy as np
 
 from local_information.config.config import TimeEvolutionConfig
 from local_information.core.minimization.projectors import Projector
 from local_information.lattice.lattice_dict import LatticeDict
-from local_information.mpi.mpi_funcs import get_mpi_variables
 
-if TYPE_CHECKING:
-    pass
 logger = logging.getLogger()
-COMM, RANK, SIZE, NAME, PARALLEL = get_mpi_variables()
 
 
 class ConjugateGradientOptimizer:

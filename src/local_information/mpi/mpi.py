@@ -4,11 +4,10 @@ import logging
 from typing import Callable
 
 from local_information.lattice.lattice_dict import LatticeDict
-from local_information.mpi.mpi_funcs import get_mpi_variables
+from local_information.mpi.mpi_setup import COMM, SIZE, PARALLEL
 from local_information.mpi.distribute import Distributor
 
 logger = logging.getLogger()
-COMM, RANK, SIZE, NAME, PARALLEL = get_mpi_variables()
 
 
 class MultiProcessing:

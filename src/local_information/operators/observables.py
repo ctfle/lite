@@ -8,13 +8,11 @@ import numpy as np
 from local_information.core.petz_map import np_sqrt
 from local_information.core.utils import get_higher_level_single_processing
 from local_information.lattice.lattice_dict import LatticeDict
-from local_information.mpi.mpi_funcs import get_mpi_variables
 
 if TYPE_CHECKING:
     from local_information.typedefs import SystemOperator
     from local_information.state.state import State
 
-COMM, RANK, SIZE, NAME, PARALLEL = get_mpi_variables()
 
 SIGMA_X = np.array([[0, 1], [1, 0]])
 SIGMA_Y = 1.0j * np.array([[0.0, -1.0], [1.0, 0.0]])

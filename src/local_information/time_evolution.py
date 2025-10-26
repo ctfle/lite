@@ -11,13 +11,12 @@ from local_information.core.runge_kutta_solvers.remote_runge_kutta import (
     RemoteRungeKuttaSolver,
 )
 from local_information.core.minimization.minimization import InformationMinimizer
-from local_information.mpi.mpi_funcs import get_mpi_variables
+from local_information.mpi.mpi_setup import RANK, PARALLEL
 from local_information.operators.hamiltonian import Hamiltonian
 from local_information.state.state import State
 from local_information.system import System
 
 logger = logging.getLogger()
-COMM, RANK, SIZE, NAME, PARALLEL = get_mpi_variables()
 
 
 class ClosedSystem(System):

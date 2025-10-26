@@ -8,12 +8,10 @@ import numpy as np
 from local_information.core.petz_map import ptrace
 from local_information.core.utils import arctanh, commutator, np_logm
 from local_information.lattice.lattice_dict import LatticeDict
-from local_information.mpi.mpi_funcs import get_mpi_variables
 
 if TYPE_CHECKING:
     from local_information.typedefs import SystemOperator, LatticeDictKeyTuple
 logger = logging.getLogger()
-COMM, RANK, SIZE, NAME, PARALLEL = get_mpi_variables()
 
 
 class Projector:
