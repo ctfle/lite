@@ -17,4 +17,3 @@ Coupling = TypeVar(
 )
 Solver = RungeKuttaSolver
 SystemOperator = Union[Hamiltonian, Lindbladian]
-LatticeDictKeyTuple = tuple[float, int]

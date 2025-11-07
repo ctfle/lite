@@ -12,7 +12,7 @@ from local_information.lindblad_evolution import OpenSystem
 from local_information.operators.lindbladian import Lindbladian
 from local_information.state.state import State
 from local_information.config.monitor import DataContainer, DataConfig
-from local_information.lattice.lattice_dict import LatticeDict
+from local_information.lattice.lattice_dict import LatticeDict, keys_from_iterable
 
 
 class TestOpenSystem:
@@ -312,6 +312,7 @@ class TestOpenSystem:
         self, keys, state_density_matrices, shift_value, test_closed_system
     ):
         test_closed_system.config.shift = shift_value
+        keys = keys_from_iterable(keys)
         with patch.object(
             test_closed_system.state,
             "density_matrix",

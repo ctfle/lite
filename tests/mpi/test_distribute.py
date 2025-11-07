@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from local_information.lattice.lattice_dict import LatticeDict
+from local_information.lattice.lattice_dict import LatticeDict, LatticeKey
 from local_information.mpi.distribute import Distributor
 
 # to test run pytest with the additional flag --with-mpi
@@ -12,7 +12,7 @@ class TestDistributeTasks:
     def random_lattice(self, request):
         size, level = request.param
         random_matrix_dict = {
-            (n, level): np.random.uniform(size=(2 ** (level + 1), 2 ** (level + 1)))
+            LatticeKey(n, level): np.random.uniform(size=(2 ** (level + 1), 2 ** (level + 1)))
             for n in range(size)
         }
         return LatticeDict.from_dict(random_matrix_dict)

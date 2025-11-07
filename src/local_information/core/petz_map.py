@@ -7,7 +7,7 @@ from scipy import sparse
 
 from functools import cached_property
 
-from local_information.lattice.lattice_dict import LatticeDictKey
+from local_information.lattice.lattice_dict import LatticeKey
 
 logger = logging.getLogger()
 
@@ -17,9 +17,9 @@ class PetzMap:
 
     def __init__(
         self,
-        key_A: tuple[float, int],
+        key_A: LatticeKey,
         density_matrix_A: np.ndarray,
-        key_B: tuple[float, int],
+        key_B: LatticeKey,
         density_matrix_B: np.ndarray,
         sqrt_method: bool = True,
         precomputed_sqrt_or_log_of_density_matrix_A: np.ndarray | None = None,
@@ -27,17 +27,17 @@ class PetzMap:
     ):
         self.sqrt_method = sqrt_method
 
-        if key_A[0] < key_B[0]:
-            self.key_A = LatticeDictKey.from_tuple(key_A)
-            self.key_B = LatticeDictKey.from_tuple(key_B)
+        if key_A.coord < key_B.coord:
+            self.key_A = key_A
+            self.key_B = key_B
 
             self.dens_A = density_matrix_A
             self.dens_B = density_matrix_B
 
         else:
             # exchange A and B
-            self.key_A = LatticeDictKey.from_tuple(key_B)
-            self.key_B = LatticeDictKey.from_tuple(key_A)
+            self.key_A = key_B
+            self.key_B = key_A
 
             self.dens_A = density_matrix_B
             self.dens_B = density_matrix_A
@@ -71,26 +71,26 @@ class PetzMap:
 
     @property
     def _leftmost_A(self):
-        return self.key_A.n - self.key_A.level / 2
+        return self.key_A.coord - self.key_A.level / 2
 
     @property
-    def _rightmost_A(self):
-        return self.key_A.n + self.key_A.level / 2
+    def _rightmost_A(self) -> float:
+        return self.key_A.coord + self.key_A.level / 2
 
     @property
-    def _leftmost_B(self):
-        return self.key_B.n - self.key_B.level / 2
+    def _leftmost_B(self) -> float:
+        return self.key_B.coord - self.key_B.level / 2
 
     @property
-    def _rightmost_B(self):
-        return self.key_B.n + self.key_B.level / 2
+    def _rightmost_B(self) -> float:
+        return self.key_B.coord + self.key_B.level / 2
 
     @property
-    def _dimension_of_A_without_B(self):
+    def _dimension_of_A_without_B(self) -> float:
         return self._leftmost_B - self._leftmost_A
 
     @property
-    def _dimension_of_B_without_A(self):
+    def _dimension_of_B_without_A(self) -> float:
         return self._rightmost_B - self._rightmost_A
 
     @property
@@ -360,14 +360,14 @@ class PetzMap:
 
         return corrected_rho_AB
 
-    def get_new_key(self):
+    def get_new_key(self) -> LatticeKey:
         # get the new key of the subsystem defined by AB
         AB_level = int(
-            (self.key_B.n + self.key_B.level / 2)
-            - (self.key_A.n - self.key_A.level / 2)
+            (self.key_B.coord + self.key_B.level / 2)
+            - (self.key_A.coord - self.key_A.level / 2)
         )
-        AB_n = (self.key_A.n - self.key_A.level / 2) + AB_level / 2
-        return LatticeDictKey.from_tuple((AB_n, AB_level))
+        AB_n = (self.key_A.coord - self.key_A.level / 2) + AB_level / 2
+        return LatticeKey(coord=AB_n, level=AB_level)
 
 
 def np_logm(A: np.ndarray) -> np.ndarray:

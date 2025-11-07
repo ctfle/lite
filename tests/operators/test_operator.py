@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 from mock import MagicMock
 
+from local_information.lattice.lattice_dict import LatticeKey
 from local_information.operators.operator import (
     Operator,
     check_hamiltonian,
@@ -18,10 +19,10 @@ class TestOperator:
     @pytest.fixture(scope="function")
     def mock_rho_dict(self, request):
         """mock rho_dict"""
-        density_matrix, n_min, n_max = request.param
+        density_matrix, keys = request.param
         mock = MagicMock()
         mock.__getitem__.return_value = density_matrix
-        mock.boundaries.return_value = (n_min, n_max)
+        mock.keys_at_level.return_value = keys
         return mock
 
     @pytest.fixture
@@ -71,16 +72,16 @@ class TestOperator:
         assert list(test_two_body_operator.operator.keys_at_level(0)) == []
         assert list(test_two_body_operator.operator.keys_at_level(1)) != []
         assert test_two_body_operator.operator.dim_at_level(1) == 9
-        pass
 
     def test_eq(self, test_onsite_operator, test_two_body_operator):
         assert test_onsite_operator != test_two_body_operator
         assert test_onsite_operator == test_onsite_operator
         assert test_two_body_operator == test_two_body_operator
-        pass
 
     @pytest.mark.parametrize(
-        "mock_rho_dict", [(np.eye(2) / 2, 0.0, 9.0)], indirect=["mock_rho_dict"]
+        "mock_rho_dict",
+        [(np.eye(2) / 2, [LatticeKey(n, 0) for n in range(10)])],
+        indirect=["mock_rho_dict"],
     )
     def test_inf_temp_expectation_value_single_particle_operator(
         self, mock_rho_dict, test_onsite_operator
@@ -90,10 +91,11 @@ class TestOperator:
         assert expt_val == 0.0
         for key, val in expt_val_dict.items():
             assert val == 0.0
-        pass
 
     @pytest.mark.parametrize(
-        "mock_rho_dict", [(np.eye(4) / 4, 0.5, 8.5)], indirect=["mock_rho_dict"]
+        "mock_rho_dict",
+        [(np.eye(4) / 4, [LatticeKey(n + 0.5, 1) for n in range(9)])],
+        indirect=["mock_rho_dict"],
     )
     def test_inf_temp_expectation_value_two_particle_operator(
         self, mock_rho_dict, test_two_body_operator
@@ -105,15 +107,23 @@ class TestOperator:
         assert expt_val == 0.0
         for key, val in expt_val_dict.items():
             assert val == 0.0
-        pass
 
     @pytest.mark.parametrize(
         "mock_rho_dict, value",
         [
-            ((np.array([[1, 0], [0, 0]]), 0.0, 9.0), 1.0),
-            ((np.array([[0.9, 0], [0, 0.1]]), 0.0, 9.0), 0.9 - 0.1),
-            ((np.array([[0.8, 0], [0, 0.2]]), 0.0, 9.0), 0.8 - 0.2),
-            ((np.array([[0.7, 0], [0, 0.3]]), 0.0, 9.0), 0.7 - 0.3),
+            ((np.array([[1, 0], [0, 0]]), [LatticeKey(n, 0) for n in range(10)]), 1.0),
+            (
+                (np.array([[0.9, 0], [0, 0.1]]), [LatticeKey(n, 0) for n in range(10)]),
+                0.9 - 0.1,
+            ),
+            (
+                (np.array([[0.8, 0], [0, 0.2]]), [LatticeKey(n, 0) for n in range(10)]),
+                0.8 - 0.2,
+            ),
+            (
+                (np.array([[0.7, 0], [0, 0.3]]), [LatticeKey(n, 0) for n in range(10)]),
+                0.7 - 0.3,
+            ),
         ],
         indirect=["mock_rho_dict"],
     )
@@ -127,7 +137,6 @@ class TestOperator:
         assert np.allclose(expt_val, 10 * value)
         for key, val in expt_val_dict.items():
             assert np.allclose(val, value)
-        pass
 
     @pytest.mark.parametrize(
         "mock_rho_dict, value",
@@ -135,8 +144,7 @@ class TestOperator:
             (
                 (
                     np.array([[1, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]),
-                    0.5,
-                    8.5,
+                    [LatticeKey(n + 0.5, 1) for n in range(9)],
                 ),
                 1.0,
             ),
@@ -145,8 +153,7 @@ class TestOperator:
                     np.array(
                         [[0.9, 0, 0, 0], [0, 0.1, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
                     ),
-                    0.5,
-                    8.5,
+                    [LatticeKey(n + 0.5, 1) for n in range(9)],
                 ),
                 0.9 - 0.1,
             ),
@@ -155,8 +162,7 @@ class TestOperator:
                     np.array(
                         [[0.8, 0, 0, 0], [0, 0.2, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
                     ),
-                    0.5,
-                    8.5,
+                    [LatticeKey(n + 0.5, 1) for n in range(9)],
                 ),
                 0.8 - 0.2,
             ),
@@ -165,8 +171,7 @@ class TestOperator:
                     np.array(
                         [[0.4, 0, 0, 0], [0, 0.2, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0.4]]
                     ),
-                    0.5,
-                    8.5,
+                    [LatticeKey(n + 0.5, 1) for n in range(9)],
                 ),
                 0.8 - 0.2,
             ),
@@ -175,8 +180,7 @@ class TestOperator:
                     np.array(
                         [[0.3, 0, 0, 0], [0, 0.2, 0, 0], [0, 0, 0.2, 0], [0, 0, 0, 0.3]]
                     ),
-                    0.5,
-                    8.5,
+                    [LatticeKey(n + 0.5, 1) for n in range(9)],
                 ),
                 0.6 - 0.4,
             ),
@@ -265,7 +269,6 @@ class TestOperator:
                 if operator_range > 0:
                     for i, index in enumerate(part[1:-1]):
                         assert index == part[i + 1]
-        pass
 
     @pytest.mark.parametrize(
         "couplings, max_l, range_, system_size",
@@ -294,7 +297,6 @@ class TestOperator:
 
         for ell in range(max_l + range_):
             assert op_dict.dim_at_level(ell) == system_size - ell
-        pass
 
     @pytest.mark.parametrize(
         "couplings, range_, system_size",
@@ -324,8 +326,6 @@ class TestOperator:
         assert op.range_ == range_
         assert op.L == system_size
 
-        pass
-
     @pytest.mark.parametrize(
         "couplings1, couplings2",
         [
@@ -337,8 +337,8 @@ class TestOperator:
     def test_operator_addition(self, couplings1, couplings2):
         op1 = Operator(couplings1)
         op2 = Operator(couplings2)
-        sumed_op = Operator(couplings1 + couplings2)
-        assert op1 + op2 == sumed_op
+        summed_op = Operator(couplings1 + couplings2)
+        assert op1 + op2 == summed_op
 
     @pytest.mark.parametrize(
         "coupling1, coupling2",
@@ -354,7 +354,6 @@ class TestOperator:
         sub_operator = op1 - op2
         for key, val in sub_operator.operator.items():
             assert np.sum(val.toarray()) == 0.0
-        pass
 
     @pytest.mark.parametrize(
         "couplings, scalar",
@@ -391,7 +390,6 @@ class TestOperator:
         assert type_set == set(types)
         for element in disorder:
             assert not any(element)
-        pass
 
     @pytest.mark.parametrize(
         "max_l, range_, type_list",
@@ -403,14 +401,15 @@ class TestOperator:
         """
         L_operators = setup_onsite_L_operators(max_l, range_, type_list)
         for key, val in L_operators.items():
-            assert key[2] in ["x", "y", "z", "+", "-", "1"]
-            assert key[0] >= key[1]
+            assert key.name in ["x", "y", "z", "+", "-", "1"]
+            assert key.level >= key.coord
         # ensure that all keys exist
-        for extend in range(max_l + range_):
-            for m in range(extend):
+        for level in range(max_l + range_):
+            for m in range(level):
                 for typ in type_list:
-                    assert (extend, m, typ) in L_operators.keys()
-        pass
+                    assert (
+                        LatticeKey(level=level, coord=m, name=typ) in L_operators.keys()
+                    )
 
     @pytest.mark.parametrize(
         "n_max, jump_couplings, n_min, jump_signature",
@@ -465,7 +464,6 @@ class TestOperator:
                     for id_element in id_:
                         assert id_element[0] in jump_type
                         assert id_element[1] == jump_value
-        pass
 
     @pytest.mark.parametrize(
         "n_max, jump_couplings, n_min, jump_signature",
@@ -498,7 +496,6 @@ class TestOperator:
                     (jump_value, jump_type) = jump_signature
                     assert id_element[0] in jump_type
                     assert id_element[1] in jump_value
-        pass
 
     @pytest.mark.parametrize(
         "jump_couplings, max_l, range_, system_size, expected",
@@ -520,11 +517,10 @@ class TestOperator:
             jump_couplings, max_l, range_, system_size
         )
         for key, val in lindblad_dict.items():
-            assert len(val) == key[1] + 1
+            assert len(val) == key.level + 1
             for block in val:
                 for element in block:
                     assert element == expected
-        pass
 
     @pytest.mark.parametrize(
         "jump_couplings, max_l, range_, system_size, jump_site",
@@ -543,8 +539,8 @@ class TestOperator:
             jump_couplings, max_l, range_, system_size
         )
         for key, val in lindblad_dict.items():
-            n = key[0]
-            ell = key[1]
+            n = key.coord
+            ell = key.level
             if n + ell / 2 >= jump_site >= n - ell / 2:
                 for i, index in enumerate(
                     range(int(n - ell / 2), int(n + ell / 2) + 1)
@@ -553,7 +549,6 @@ class TestOperator:
                         assert val[i] is not None
             else:
                 assert val[0] is None
-            pass
 
     @pytest.mark.parametrize(
         "jump_couplings, max_l, range_, system_size, expected",
@@ -581,8 +576,8 @@ class TestOperator:
             jump_couplings, max_l, range_, system_size
         )
         for key, val in lindblad_dict.items():
-            n = key[0]
-            ell = key[1]
+            n = key.coord
+            ell = key.level
             if n + ell / 2 >= jump_site >= n - ell / 2:
                 for i, index in enumerate(
                     range(int(n - ell / 2), int(n + ell / 2) + 1)
@@ -594,14 +589,13 @@ class TestOperator:
                             assert element[1] == expected[1]
             else:
                 assert val[0] is None
-            pass
 
     @pytest.mark.parametrize(
         "jump_couplings, max_l, range_, system_size, expected",
         [
             (
                 [
-                    ["+", [0.1 for j in range(4)]],
+                    ["+", [0.1 for _ in range(4)]],
                     ["-", [0.1 if j == 2 else None for j in range(4)]],
                     ["z", [0.1 if j == 3 else None for j in range(4)]],
                 ],
@@ -623,8 +617,8 @@ class TestOperator:
             jump_couplings, max_l, range_, system_size
         )
         for key, val in lindblad_dict.items():
-            n = key[0]
-            ell = key[1]
+            n = key.coord
+            ell = key.level
             # each element in the val must contain the '+' term
             for element in val:
                 assert ("+", jump_value) in element
@@ -639,4 +633,3 @@ class TestOperator:
                         for element in val[i]:
                             assert element[0] in expected[0]
                             assert element[1] == expected[1]
-        pass

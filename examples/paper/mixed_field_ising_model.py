@@ -1,5 +1,7 @@
 import os
 
+from local_information.lattice.lattice_dict import LatticeKey
+
 # This script generates some of the results shown in PRX QUANTUM 5, 020352 (2024)
 # for the mixed field Ising model. Simulations with large min_l and max_l might require
 # distributed computing systems to yield the long-time time-evolution.
@@ -34,7 +36,7 @@ thermal_regime = (
     np.eye(2**number_of_thermal_sites, dtype=np.complex128)
     - beta
     * setup_hamiltonian.subsystem_hamiltonian[
-        (L // 2, number_of_thermal_sites - 1)
+        LatticeKey(L // 2, number_of_thermal_sites - 1)
     ].toarray()
 ) / 2**number_of_thermal_sites
 # infinite temperature sites on the boundary

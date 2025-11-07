@@ -2,16 +2,16 @@ from __future__ import annotations
 
 import logging
 from copy import deepcopy
+from functools import cached_property
 from itertools import compress
 from numbers import Number
-from typing import ItemsView, Iterator, Union, Type, Sequence
+from typing import ItemsView, Iterator, Iterable, Union, Type, Sequence
 
 import numpy as np
 from numpy.typing import ArrayLike
 from scipy import sparse
 
 from local_information.lattice.protocols import Arithmetics
-from local_information.mpi.mpi_setup import COMM, RANK
 
 logger = logging.getLogger()
 Matrix = Union[np.ndarray, sparse.csr_matrix, sparse.csc_matrix, list, tuple]
@@ -26,12 +26,13 @@ class LatticeDict(dict):
 
     def __init__(
         self,
-        items: ItemsView[tuple, ArrayLike] | Iterator[tuple, ArrayLike] = iter(dict()),
+        items: ItemsView[LatticeKey, ArrayLike]
+        | Iterator[LatticeKey, ArrayLike] = iter(dict()),
     ):
         super().__init__()
         types = []
         for key, value in items:
-            if not isinstance(key, tuple):
+            if not isinstance(key, LatticeKey):
                 raise ValueError
 
             if not isinstance(value, Number):
@@ -65,11 +66,13 @@ class LatticeDict(dict):
             return False
 
     @classmethod
-    def from_list(cls, keys: list[tuple], values: Sequence[ArrayLike]) -> LatticeDict:
+    def from_list(
+        cls, keys: list[LatticeKey], values: Sequence[ArrayLike]
+    ) -> LatticeDict:
         return cls(zip(keys, values))
 
     @classmethod
-    def from_dict(cls, input_dict: dict[tuple, ArrayLike]) -> LatticeDict:
+    def from_dict(cls, input_dict: dict[LatticeKey, ArrayLike]) -> LatticeDict:
         return cls(input_dict.items())
 
     def __add__(self, other: LatticeDict) -> LatticeDict:
@@ -134,7 +137,7 @@ class LatticeDict(dict):
             else:
                 self[key] = other[key]
 
-    def overlap(self, other: LatticeDict) -> list[tuple]:
+    def overlap(self, other: LatticeDict) -> list[LatticeKey]:
         """!
         computes the overlap with 'other'
         :returns: the corresponding keys
@@ -145,9 +148,9 @@ class LatticeDict(dict):
                 overlap += [key]
         return overlap
 
-    def __setitem__(self, key: tuple, value):
-        if not isinstance(key, tuple):
-            raise TypeError("key must be tuple")
+    def __setitem__(self, key: LatticeKey, value):
+        if not isinstance(key, LatticeKey):
+            raise TypeError("key must be LatticeKey")
 
         if not isinstance(value, Arithmetics):
             raise TypeError(
@@ -169,22 +172,36 @@ class LatticeDict(dict):
                         type(value),
                     )
 
-    def smallest_at_level(self, ell: int) -> float | None:
-        n_list = self.n_at_level(ell)
+    def smallest_at_level(self, level: int) -> float | None:
+        n_list = self.coords_at_level(level)
         if n_list:
             return min(n_list)
         else:
             return None
 
-    def largest_at_level(self, ell: int) -> float | None:
-        n_list = self.n_at_level(ell)
+    def largest_at_level(self, level: int) -> float | None:
+        n_list = self.coords_at_level(level)
         if n_list:
             return max(n_list)
         else:
             return None
 
+    def leftmost_key_at_level(self, level: int):
+        n_list = self.coords_at_level(level)
+        if n_list:
+            return LatticeKey(min(n_list), level)
+        else:
+            return None
+
+    def rightmost_key_at_level(self, level: int):
+        n_list = self.coords_at_level(level)
+        if n_list:
+            return LatticeKey(max(n_list), level)
+        else:
+            return None
+
     def dim_at_level(self, ell: int) -> int:
-        return len(self.n_at_level(ell))
+        return len(self.coords_at_level(ell))
 
     def boundaries(self, ell: int) -> tuple[float, float]:
         """!
@@ -194,18 +211,8 @@ class LatticeDict(dict):
         n_min = self.smallest_at_level(ell)
         return n_min, n_max
 
-    def get_and_broadcast_boundaries(self, ell: int):
-        n_min, n_max = None, None
-        if RANK == 0:
-            n_min, n_max = self.boundaries(ell)
-
-        n_min = COMM.bcast(n_min, root=0)
-        n_max = COMM.bcast(n_max, root=0)
-
-        return n_min, n_max
-
-    def n_at_level(self, ell: int) -> list:
-        return [n for (n, level) in self.keys() if level == ell]
+    def coords_at_level(self, ell: int) -> list[float]:
+        return [key.coord for key in self.keys() if key.level == ell]
 
     def keys_at_level(self, ell: int) -> LatticeDictIterator:
         return LatticeDictIterator(self, ell, values=False)
@@ -217,66 +224,18 @@ class LatticeDict(dict):
         return LatticeDictIterator(self, ell)
 
     def get_max_level(self) -> int:
-        return max(map(lambda x: x[1], self.keys()))
+        return max(map(lambda x: x.level, self.keys()))
 
     def has_single_entry_at_level(self, level: int) -> bool:
         return np.allclose(self.largest_at_level(level), self.smallest_at_level(level))
 
-    def add_sites(self, delta_n: int, TI_keys: list[tuple], orientation: str = "right"):
-        """!
-        Adds delta_n sites at the end given by orientation
-        """
-        size = len(TI_keys)
-        TI_keys = sorted(TI_keys)
-
-        check = True
-        r = 0
-        if orientation == "left":
-            n_min = min(map(lambda x: x[0], TI_keys))
-            while check:
-                for TI_k in TI_keys[::-1]:
-                    TI_n = TI_k[0]
-                    if (TI_n - r * size) >= (n_min - delta_n):
-                        mod_key = (TI_k[0] - r * size, TI_k[1])
-                        self[mod_key] = self[TI_k]
-                    else:
-                        check = False
-                r += 1
-        if orientation == "right":
-            n_max = max(map(lambda x: x[0], TI_keys))
-            while check:
-                for TI_k in TI_keys:
-                    TI_n = TI_k[0]
-                    if (TI_n + r * size) <= (n_max + delta_n):
-                        mod_key = (TI_k[0] + size * r, TI_k[1])
-                        self[mod_key] = self[TI_k]
-                    else:
-                        check = False
-                r += 1
-        pass
-
-    def delete_sites(self, delta_n: int, ell: int, orientation: str = "right"):
-        """!
-        Deletes delta_n sites at the right or left end
-        """
-        if orientation == "left":
-            n_min = self.smallest_at_level(ell)
-            for n in range(delta_n):
-                self.pop((n_min + n, ell), None)
-        elif orientation == "right":
-            n_max = self.largest_at_level(ell)
-            for n in range(delta_n):
-                self.pop((n_max - n, ell), None)
-        pass
-
     def kill_all_except(self, ell: int):
         """!
-        Delete all key-value pairs except those where key[1]==ell
+        Delete all key-value pairs except those where key.level==ell
         """
         for key in list(self.keys()):
-            if key[1] != ell:
+            if key.level != ell:
                 self.pop(key, None)
-        pass
 
     def dagger(self) -> LatticeDict:
         daggered = self.deepcopy()
@@ -312,6 +271,10 @@ class LatticeDictIterator:
         self.n = None
         self.reset()
 
+    @cached_property
+    def _largest_at_level(self):
+        return self.lattice.largest_at_level(self.level)
+
     def __iter__(self):
         self.reset()
         return self
@@ -320,8 +283,8 @@ class LatticeDictIterator:
         if self.n is not None:
             self.n += 1
 
-        if self.n is not None and self.n <= self.lattice.largest_at_level(self.level):
-            key = (self.n, self.level)
+        if self.n is not None and self.n <= self._largest_at_level:
+            key = LatticeKey(self.n, self.level)
             next_data = tuple(compress((key, self.lattice.get(key)), self.tags))
             if len(next_data) == 1:
                 return next_data[0]
@@ -335,23 +298,75 @@ class LatticeDictIterator:
             self.n = None
         else:
             self.n = self.lattice.smallest_at_level(self.level) - 1
-        pass
 
 
-class LatticeDictKey:
-    def __init__(self, n: float, level: int):
-        self.n = n
+class LatticeKey:
+    def __init__(self, coord: float, level: int, name: str | None = None):
+        self.coord = coord
         self.level = level
+        self.name = name
+        assert isinstance(self.level, int)
+
+    @property
+    def level(self):
+        return self._level
+
+    @level.setter
+    def level(self, value):
+        if isinstance(value, int):
+            self._level = value
+        elif isinstance(value, float):
+            if value.is_integer():  # checks if float is like 1.0, 2.0 etc
+                self._level = int(value)
+            else:
+                raise ValueError(
+                    f"Level must be int or float with no fractional part, got {value}"
+                )
 
     @classmethod
-    def from_tuple(cls, key: tuple[float, int]):
-        return cls(n=key[0], level=key[1])
+    def from_tuple(cls, key: tuple[float, int], name: str | None = None) -> LatticeKey:
+        return cls(coord=key[0], level=key[1], name=name)
 
-    def __eq__(self, other):
-        if not isinstance(other, LatticeDictKey):
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, LatticeKey):
             return False
-
-        return self.n == other.n and self.level == other.level
+        if self.name:
+            return (
+                np.allclose(self.coord, other.coord)
+                and self.level == other.level
+                and self.name == other.name
+            )
+        else:
+            return np.allclose(self.coord, other.coord) and self.level == other.level
 
     def __hash__(self):
-        return hash((self.n, self.level))
+        if self.name:
+            return hash((self.coord, self.level, self.name))
+        else:
+            return hash((self.coord, self.level))
+
+    def __str__(self) -> str:
+        if self.name:
+            return f"({self.coord}, {self.level}, {self.name})"
+        else:
+            return f"({self.coord}, {self.level})"
+
+    __repr__ = __str__
+
+    def get_lower_level_left(self) -> LatticeKey:
+        assert self.level != 0, "level is 0, no lower level existing"
+        return LatticeKey(self.coord - 0.5, self.level - 1)
+
+    def get_lower_level_right(self) -> LatticeKey:
+        assert self.level != 0, "level is 0, no lower level existing"
+        return LatticeKey(self.coord + 0.5, self.level - 1)
+
+    def get_higher_level_right(self) -> LatticeKey:
+        return LatticeKey(self.coord + 0.5, self.level + 1)
+
+    def get_higher_level_left(self) -> LatticeKey:
+        return LatticeKey(self.coord - 0.5, self.level + 1)
+
+
+def keys_from_iterable(keys: Iterable[tuple[float, int]]):
+    return list(map(lambda x: LatticeKey.from_tuple(x), keys))

@@ -31,14 +31,14 @@ class TestRungeKutta:
         return Hamiltonian(max_l, hamiltonian_couplings)
 
     @pytest.fixture
-    def test_mnay_particle_hamiltonian_zz(self):
+    def test_many_particle_hamiltonian_zz(self):
         J_list = [1 for _ in range(5)]
         hamiltonian_couplings = [["zz", J_list]]
         max_l = 5
         return Hamiltonian(max_l, hamiltonian_couplings)
 
     @pytest.fixture
-    def test_mnay_particle_hamiltonian_xx(self):
+    def test_many_particle_hamiltonian_xx(self):
         J_list = [1 for _ in range(5)]
         hamiltonian_couplings = [["xx", J_list]]
         max_l = 5
@@ -121,10 +121,9 @@ class TestRungeKutta:
 
         # check that no information leaked towards larger scales
         # neither anything spread to initially infinite temperature sites
-
         assert test_state.density_matrix.keys() == new_dens_mat.keys()
-        assert np.allclose(test_state.density_matrix[(0.5, 1)], np.eye(4) / 4)
-        assert np.allclose(test_state.density_matrix[(3.5, 1)], np.eye(4) / 4)
+        assert np.allclose(test_state.density_matrix[LatticeKey(0.5, 1)], np.eye(4) / 4)
+        assert np.allclose(test_state.density_matrix[LatticeKey(3.5, 1)], np.eye(4) / 4)
 
     def test_runge_kutta_single_body_lindbladian(
         self, test_config, test_single_particle_lindbladian, test_state
@@ -141,17 +140,17 @@ class TestRungeKutta:
         # check that no information leaked towards larger scales
         # neither anything spread to initially infinite temperature sites
         assert test_state.density_matrix.keys() == new_dens_mat.keys()
-        assert np.allclose(new_dens_mat[(0.5, 1)], np.eye(4) / 4)
-        assert np.allclose(new_dens_mat[(3.5, 1)], np.eye(4) / 4)
+        assert np.allclose(new_dens_mat[LatticeKey(0.5, 1)], np.eye(4) / 4)
+        assert np.allclose(new_dens_mat[LatticeKey(3.5, 1)], np.eye(4) / 4)
 
-    def test_runge_kutta_mnay_body_hamiltonian_xx(
-        self, test_config, test_mnay_particle_hamiltonian_xx, test_state
+    def test_runge_kutta_many_body_hamiltonian_xx(
+        self, test_config, test_many_particle_hamiltonian_xx, test_state
     ):
         range_ = 1
         test_rk = LocalRungeKuttaSolver(
             runge_kutta_config=test_config,
             range_=range_,
-            hamiltonian=test_mnay_particle_hamiltonian_xx,
+            hamiltonian=test_many_particle_hamiltonian_xx,
         )
         test_rk.step_size = 0.015
         new_dens_mat, new_time = test_rk.solve(test_state)
@@ -159,8 +158,8 @@ class TestRungeKutta:
         # to get the exact solution we require the matrix exponential of the Hamiltonian
 
         # full system Hamiltonian
-        H_full_system = test_mnay_particle_hamiltonian_xx.subsystem_hamiltonian[
-            (2.0, 4)
+        H_full_system = test_many_particle_hamiltonian_xx.subsystem_hamiltonian[
+            LatticeKey(2.0, 4)
         ]
 
         # compute the time evolution operator
@@ -172,12 +171,12 @@ class TestRungeKutta:
             density_matrices += get_higher_level(density_matrices, 1 + ell)
 
         # state of the full system has key (2.0, 4)
-        full_system_state = density_matrices[(2.0, 4)]
+        full_system_state = density_matrices[LatticeKey(2.0, 4)]
 
         # compute time evolution
         exact_evolved_state = U @ full_system_state @ np.conjugate(np.transpose(U))
 
-        exact_state = LatticeDict.from_list([(2.0, 4)], [exact_evolved_state])
+        exact_state = LatticeDict.from_list([LatticeKey(2.0, 4)], [exact_evolved_state])
         # get the subsystems of the exact evolved state
         for ell in range(3):
             exact_state = compute_lower_level(exact_state, 4 - ell)
@@ -185,14 +184,14 @@ class TestRungeKutta:
         for key, val in exact_state.items():
             assert np.max(np.abs(exact_state[key] - new_dens_mat[key])) < 1e-6
 
-    def test_runge_kutta_mnay_body_hamiltonian_zz(
-        self, test_config, test_mnay_particle_hamiltonian_zz, test_state
+    def test_runge_kutta_many_body_hamiltonian_zz(
+        self, test_config, test_many_particle_hamiltonian_zz, test_state
     ):
         range_ = 1
         test_rk = LocalRungeKuttaSolver(
             runge_kutta_config=test_config,
             range_=range_,
-            hamiltonian=test_mnay_particle_hamiltonian_zz,
+            hamiltonian=test_many_particle_hamiltonian_zz,
         )
         test_rk.step_size = 0.015
         new_dens_mat, new_time = test_rk.solve(test_state)
@@ -201,8 +200,8 @@ class TestRungeKutta:
         # to get the exact solution we require the matrix exponential of the Hamiltonian
 
         # full system Hamiltonian
-        H_full_system = test_mnay_particle_hamiltonian_zz.subsystem_hamiltonian[
-            (2.0, 4)
+        H_full_system = test_many_particle_hamiltonian_zz.subsystem_hamiltonian[
+            LatticeKey(2.0, 4)
         ]
 
         # compute the time evolution operator
@@ -214,12 +213,12 @@ class TestRungeKutta:
             density_matrices += get_higher_level(density_matrices, 1 + ell)
 
         # state of the full system has key (2.0, 4)
-        full_system_state = density_matrices[(2.0, 4)]
+        full_system_state = density_matrices[LatticeKey(2.0, 4)]
 
         # compute time evolution
         exact_evolved_state = U @ full_system_state @ np.conjugate(np.transpose(U))
 
-        exact_state = LatticeDict.from_list([(2.0, 4)], [exact_evolved_state])
+        exact_state = LatticeDict.from_list([LatticeKey(2.0, 4)], [exact_evolved_state])
         # get the subsystems of the exact evolved state
         for ell in range(3):
             exact_state = compute_lower_level(exact_state, 4 - ell)

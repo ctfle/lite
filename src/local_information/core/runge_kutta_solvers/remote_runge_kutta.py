@@ -5,6 +5,7 @@ import sys
 from copy import deepcopy
 import numpy as np
 
+from local_information.lattice.lattice_dict import LatticeKey
 from local_information.mpi.mpi import *
 from local_information.mpi.mpi_setup import COMM, RANK
 from local_information.core.utils import commutator
@@ -35,7 +36,7 @@ class RemoteRungeKuttaSolver(RungeKuttaSolver):
         )
 
     def dissipator(
-        self, key: tuple[float, int], density_matrix: np.ndarray
+        self, key: LatticeKey, density_matrix: np.ndarray
     ) -> np.ndarray | None:
         # no dissipator for Hamiltonian evolution
         pass
@@ -174,10 +175,12 @@ class RemoteRungeKuttaSolver(RungeKuttaSolver):
             key_max_l_dim = work_dict.dim_at_level(dyn_max_l)
             # compute the rhs of the von-Neumann equation at level max_l and store it in work_dict
             for m, k in enumerate(work_dict.keys_at_level(dyn_max_l)):
-                # m_ is the number of sites left to k
+                # m is the number of sites left to k
                 if m >= self.range_:
                     # the site is at least _range away form the boundary
-                    key_l = (k[0] - 0.5 * self.range_, dyn_max_l + self.range_)
+                    key_l = LatticeKey(
+                        k.coord - 0.5 * self.range_, dyn_max_l + self.range_
+                    )
                     DM_l = work_dict[key_l]
                     H_max_l_range = self._system_operator.subsystem_hamiltonian[key_l]
                     # build commutator and trace out _range sites on the left
@@ -189,7 +192,7 @@ class RemoteRungeKuttaSolver(RungeKuttaSolver):
 
                 else:
                     # the site is less than _range away form the left boundary
-                    key_l = (k[0] - 0.5 * m, dyn_max_l + m)
+                    key_l = LatticeKey(k.coord - 0.5 * m, dyn_max_l + m)
                     DM_l = work_dict[key_l]
                     H_max_l_m_ = self._system_operator.subsystem_hamiltonian[key_l]
                     # build commutator and trace out _m_ sites on the left
@@ -201,7 +204,9 @@ class RemoteRungeKuttaSolver(RungeKuttaSolver):
                 bar_m = (key_max_l_dim - 1) - m
                 if bar_m >= self.range_:
                     # the site is at least _range away form the boundary
-                    key_r = (k[0] + 0.5 * self.range_, dyn_max_l + self.range_)
+                    key_r = LatticeKey(
+                        k.coord + 0.5 * self.range_, dyn_max_l + self.range_
+                    )
                     DM_r = work_dict[key_r]
                     H_max_l_range = self._system_operator.subsystem_hamiltonian[key_r]
                     # build commutator and trace out _range sites on the left
@@ -235,9 +240,7 @@ class RemoteRungeKuttaSolver(RungeKuttaSolver):
                 work_dict[k] = -1j * rhs
 
             # drop everything not at level max_l
-            for key in list(work_dict):
-                if key[1] != dyn_max_l:
-                    work_dict.pop(key, None)
+            work_dict.kill_all_except(dyn_max_l)
 
         return work_dict
 
@@ -256,15 +259,15 @@ class RemoteLindbladRungeKuttaSolver(RemoteRungeKuttaSolver):
         )
 
     def dissipator(
-        self, key: tuple[float, int], density_matrix: np.ndarray
+        self, key: LatticeKey, density_matrix: np.ndarray
     ) -> np.ndarray | None:
         """!
         Computes the dissipator of the Lindblad equation for the Lindblad operator L
         """
 
         lindbladian_dict_entry = self._system_operator.lindbladian_dict[key]
-        ell = int(key[1])
-        D = np.zeros((2 ** (ell + 1), 2 ** (ell + 1)), dtype=np.complex128)
+
+        D = np.zeros((2 ** (key.level + 1), 2 ** (key.level + 1)), dtype=np.complex128)
 
         count_non_zero_L = 0
         for e, dict_entry in enumerate(lindbladian_dict_entry):
@@ -276,7 +279,7 @@ class RemoteLindbladRungeKuttaSolver(RemoteRungeKuttaSolver):
                 for entry in dict_entry:
                     tpe = entry[0]
                     coupling = entry[1]
-                    id_ = (ell, e, tpe)
+                    id_ = LatticeKey(level=key.level, coord=e, name=tpe)
                     L = self._system_operator.L_operators[id_].toarray()
                     # L_operators is a LatticeDict with keys (ell,m,tpe)
                     L_dagger = np.conjugate(np.transpose(L))

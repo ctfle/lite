@@ -10,6 +10,7 @@ from local_information.core.runge_kutta_solvers.runge_kutta_solver import (
     RungeKuttaSolver,
 )
 from local_information.core.utils import anti_commutator
+from local_information.lattice.lattice_dict import LatticeKey
 
 if TYPE_CHECKING:
     from local_information.operators.lindbladian import Lindbladian
@@ -32,7 +33,7 @@ class LocalRungeKuttaSolver(RungeKuttaSolver):
         )
 
     def dissipator(
-        self, key: tuple[float, int], density_matrix: np.ndarray
+        self, key: LatticeKey, density_matrix: np.ndarray
     ) -> np.ndarray | None:
         # no dissipators present in Hamiltonian evolution
         return None
@@ -56,17 +57,16 @@ class LocalLindbladRungeKuttaSolver(RungeKuttaSolver):
         )
 
     def dissipator(
-        self, key: tuple[float, int], density_matrix: np.ndarray
+        self, key: LatticeKey, density_matrix: np.ndarray
     ) -> np.ndarray | None:
         """! Computes the dissipator of the Lindblad equation for the Lindblad operator L"""
 
         lindbladian_dict_entry = self._system_operator.lindbladian_dict[key]
-        ell = int(key[1])
-        D = np.zeros((2 ** (ell + 1), 2 ** (ell + 1)), dtype=np.complex128)
+        D = np.zeros((2 ** (key.level + 1), 2 ** (key.level + 1)), dtype=np.complex128)
 
         count_non_zero_L = 0
         for e, dict_entry in enumerate(lindbladian_dict_entry):
-            # dict_entry is either None or list; if list then it has the form [(type,coupling),()...]
+            # dict_entry is either None or list; if list then it has the form [(type, coupling), ...]
             if dict_entry is None:
                 continue
             else:
@@ -74,9 +74,9 @@ class LocalLindbladRungeKuttaSolver(RungeKuttaSolver):
                 for entry in dict_entry:
                     tpe = entry[0]
                     coupling = entry[1]
-                    id_ = (ell, e, tpe)
+                    id_ = LatticeKey(level=key.level, coord=e, name=tpe)
                     L = self._system_operator.L_operators[id_].toarray()
-                    # L_operators is a LatticeDict with keys (ell,m,tpe)
+                    # L_operators is a LatticeDict with keys LatticeKey(ell,m,tpe)
                     L_dagger = np.conjugate(np.transpose(L))
                     D += coupling * (
                         L @ density_matrix @ L_dagger

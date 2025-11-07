@@ -3,8 +3,8 @@ from __future__ import annotations
 import logging
 import numpy as np
 from local_information.core.utils import get_higher_level_single_processing
-from local_information.lattice.lattice_dict import LatticeDict
-from local_information.state.state_helper_funcs import get_base_2_dim
+from local_information.lattice.lattice_dict import LatticeDict, LatticeKey
+from local_information.state.state_utils import get_base_2_dim
 from local_information.core.utils import (
     compute_lower_level,
     compute_lower_level_sparse,
@@ -13,6 +13,7 @@ from local_information.core.petz_map import PetzMap
 from typing import Sequence
 
 logger = logging.getLogger()
+
 
 def get_finite_state(
     density_matrix_sequence: Sequence[np.ndarray], max_l: int
@@ -39,7 +40,9 @@ def get_finite_state(
                 f"density_matrix_sequence has level {input_dim} larger than max_l={max_l}"
             )
             # reduce to level max_l
-            state_dict[(input_level / 2, input_level)] = density_matrix_sequence[0]
+            state_dict[LatticeKey(input_level / 2, input_level)] = (
+                density_matrix_sequence[0]
+            )
             ell = input_level
             while ell > max_l:
                 state_dict = compute_lower_level(state_dict, ell)
@@ -47,7 +50,9 @@ def get_finite_state(
             state_dict.kill_all_except(max_l)
             state_level = max_l
         else:
-            state_dict[(input_level / 2, input_level)] = density_matrix_sequence[0]
+            state_dict[LatticeKey(input_level / 2, input_level)] = (
+                density_matrix_sequence[0]
+            )
 
     else:
         if input_dim * len(density_matrix_sequence) - 1 <= max_l:
@@ -95,7 +100,7 @@ def build_higher_level_from_sequence_of_density_matrices(
     input_dim = get_base_2_dim(density_matrix_sequence[0])
     ell = input_dim - 1
 
-    keys = get_non_overlaping_keys(ell, sequence_length)
+    keys = get_non_overlapping_keys(ell, sequence_length)
     higher_level_density_matrices = LatticeDict.from_list(
         keys=keys, values=density_matrix_sequence
     )
@@ -111,10 +116,8 @@ def build_higher_level_from_sequence_of_density_matrices(
             )
             petz_mapped_density_matrix = petz_map.get_combined_system()
             new_key = petz_map.get_new_key()
-            higher_level_density_matrices[(new_key.n, new_key.level)] = (
-                petz_mapped_density_matrix
-            )
-            updated_keys += [(new_key.n, new_key.level)]
+            higher_level_density_matrices[new_key] = petz_mapped_density_matrix
+            updated_keys += [new_key]
 
         ell = 2 * ell + 1
         keys = updated_keys
@@ -196,7 +199,7 @@ def reduce_level_to(density_matrices: LatticeDict, to_level: int) -> LatticeDict
     return lower_level_density_matrices
 
 
-def get_non_overlaping_keys(level: int, length: int) -> list[tuple[float, int]]:
+def get_non_overlapping_keys(level: int, length: int) -> list[LatticeKey]:
     """
     Compute keys of subsystems that *do not* share common subsystems
     at given `level` and `length`
@@ -204,4 +207,4 @@ def get_non_overlaping_keys(level: int, length: int) -> list[tuple[float, int]]:
     non_overlapping_n_values = np.arange(
         level / 2, (level + 1) * length - level / 2, level + 1
     )
-    return [(n, level) for n in non_overlapping_n_values]
+    return [LatticeKey(coord=n, level=level) for n in non_overlapping_n_values]

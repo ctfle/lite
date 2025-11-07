@@ -13,7 +13,7 @@ from local_information.state.state import State
 from local_information.time_evolution import ClosedSystem
 from local_information.config.monitor import DataContainer, DataConfig
 from local_information.core.petz_map import ptrace
-from local_information.lattice.lattice_dict import LatticeDict
+from local_information.lattice.lattice_dict import LatticeDict, keys_from_iterable, LatticeKey
 from local_information.core.utils import Status
 
 np.random.seed(42)
@@ -132,7 +132,7 @@ class TestClosedSystem:
         site_0 = np.eye(2) / 2
         site_1 = (
             np.eye(2**3, dtype=np.complex128)
-            - 0.1 * hamiltonian.subsystem_hamiltonian[(L // 2, 2)].toarray()
+            - 0.1 * hamiltonian.subsystem_hamiltonian[LatticeKey(L // 2, 2)].toarray()
         ) / 8
         system = [[site_1], [site_0]]
         state = State.build(system, 1)
@@ -397,6 +397,7 @@ class TestClosedSystem:
         self, keys, state_density_matrices, shift_value, test_closed_system
     ):
         test_closed_system.config.shift = shift_value
+        keys = keys_from_iterable(keys)
         with patch.object(
             test_closed_system.state,
             "density_matrix",
@@ -556,8 +557,8 @@ class TestClosedSystem:
             # get boundary density matrices
             ell = test_closed_system.state.dyn_max_l
             n_min, n_max = density_matrix.boundaries(ell)
-            left = density_matrix[(n_min, ell)]
-            right = density_matrix[(n_max, ell)]
+            left = density_matrix[LatticeKey(n_min, ell)]
+            right = density_matrix[LatticeKey(n_max, ell)]
             left_end_lowest_level = ptrace(left, spins_to_trace_out=ell, end="right")
             right_end_lowest_level = ptrace(right, spins_to_trace_out=ell, end="left")
 
@@ -589,8 +590,8 @@ class TestClosedSystem:
             # get boundary density matrices
             ell = test_closed_system.state.dyn_max_l
             n_min, n_max = density_matrix.boundaries(ell)
-            left = density_matrix[(n_min, ell)]
-            right = density_matrix[(n_max, ell)]
+            left = density_matrix[LatticeKey(n_min, ell)]
+            right = density_matrix[LatticeKey(n_max, ell)]
             left_end_lowest_level = ptrace(left, spins_to_trace_out=ell, end="right")
             right_end_lowest_level = ptrace(right, spins_to_trace_out=ell, end="left")
 

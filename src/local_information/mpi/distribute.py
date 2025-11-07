@@ -1,14 +1,11 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
 from functools import cached_property
 import logging
 
 import numpy as np
 
-from local_information.lattice.lattice_dict import LatticeDict
+from local_information.lattice.lattice_dict import LatticeDict, LatticeKey
 
-if TYPE_CHECKING:
-    from local_information.typedefs import LatticeDictKeyTuple
 
 from local_information.mpi.mpi_setup import COMM, RANK, SIZE
 
@@ -60,7 +57,7 @@ class Distributor:
         return next(self._density_matrices.values_at_level(self._level)).shape
 
     @property
-    def _ordered_keys(self) -> list[list[LatticeDictKeyTuple]]:
+    def _ordered_keys(self) -> list[list[LatticeKey]]:
         return [key for key in self._density_matrices.keys_at_level(self._level)]
 
     @cached_property
@@ -109,18 +106,20 @@ class Distributor:
 
         return sub_lattices
 
-    def _split_keys(self, number_of_splits: int, shift: int = 1) -> list[list[tuple]]:
+    def _split_keys(
+        self, number_of_splits: int, shift: int = 1
+    ) -> list[list[LatticeKey]]:
         """Split the keys in blocks"""
         split_up_keys = np.array_split(self._ordered_keys, number_of_splits)
-        # get the keys as list of tuples
-        split_up_keys = list(map(lambda x: list([tuple(y) for y in x]), split_up_keys))
+        # turn it into a list
+        split_up_keys = list(map(lambda x: list(x), split_up_keys))
 
         # if shifting is required
         self._add_keys_of_next_block(split_up_keys=split_up_keys, shift=shift)
         return split_up_keys
 
     @staticmethod
-    def _add_keys_of_next_block(split_up_keys: list[list[tuple]], shift: int = 1):
+    def _add_keys_of_next_block(split_up_keys: list[list[LatticeKey]], shift: int = 1):
         """
         Add the first `shift` many elements of the keys
         in the consecutive block to each block.

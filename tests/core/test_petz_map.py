@@ -77,8 +77,8 @@ class TestPetzMap:
         precomp_dens_B = np_sqrt(density_matrix_2)
 
         petz_map = PetzMap(
-            key_A=A,
-            key_B=B,
+            key_A=LatticeKey(*A),
+            key_B=LatticeKey(*B),
             density_matrix_A=density_matrix_1,
             density_matrix_B=density_matrix_2,
             precomputed_sqrt_or_log_of_density_matrix_A=precomp_dens_A,
@@ -89,7 +89,7 @@ class TestPetzMap:
         new_key = petz_map.get_new_key()
 
         assert np.allclose(rho_AB, petz_map_result)
-        assert new_key.n == (A[0] + B[0]) / 2
+        assert new_key.coord == (A[0] + B[0]) / 2
         assert new_key.level == A[1] + abs(B[0] - A[0])
 
     @pytest.mark.parametrize(
@@ -116,8 +116,8 @@ class TestPetzMap:
         precomp_dens_B = np_sqrt(density_matrix_2)
         with pytest.raises(ValueError):
             p_map = PetzMap(
-                key_A=A,
-                key_B=B,
+                key_A=LatticeKey(*A),
+                key_B=LatticeKey(*B),
                 density_matrix_A=density_matrix_1,
                 density_matrix_B=density_matrix_2,
                 precomputed_sqrt_or_log_of_density_matrix_A=precomp_dens_A,
@@ -157,8 +157,8 @@ class TestPetzMap:
         precomp_dens_B = np_sqrt(density_matrix_2)
         with pytest.raises(ValueError):
             p_map = PetzMap(
-                key_A=A,
-                key_B=B,
+                key_A=LatticeKey(*A),
+                key_B=LatticeKey(*B),
                 density_matrix_A=density_matrix_1,
                 density_matrix_B=density_matrix_2,
                 precomputed_sqrt_or_log_of_density_matrix_A=precomp_dens_A,
@@ -206,8 +206,8 @@ class TestPetzMap:
         precomp_dens_B = np_logm(density_matrix_2)
 
         petz_map = PetzMap(
-            key_A=A,
-            key_B=B,
+            key_A=LatticeKey(*A),
+            key_B=LatticeKey(*B),
             density_matrix_A=density_matrix_1,
             density_matrix_B=density_matrix_2,
             precomputed_sqrt_or_log_of_density_matrix_A=precomp_dens_A,
@@ -217,7 +217,7 @@ class TestPetzMap:
         rho_AB = petz_map.get_combined_system()
         new_key = petz_map.get_new_key()
         assert np.allclose(rho_AB, petz_map_result)
-        assert new_key.n == 1.5
+        assert new_key.coord == 1.5
         assert new_key.level == 1
 
     @pytest.mark.parametrize(
@@ -237,8 +237,8 @@ class TestPetzMap:
         A = (1.5, 1)
         B = (2.5, 1)
         petz_map = PetzMap(
-            key_A=A,
-            key_B=B,
+            key_A=LatticeKey(*A),
+            key_B=LatticeKey(*B),
             density_matrix_A=density_matrix_1,
             density_matrix_B=density_matrix_2,
             precomputed_sqrt_or_log_of_density_matrix_A=precomp_dens_A,
@@ -248,7 +248,7 @@ class TestPetzMap:
         rho_AB = petz_map.get_combined_system()
         new_key = petz_map.get_new_key()
         assert np.allclose(rho_AB, petz_map_result)
-        assert new_key.n == 2
+        assert new_key.coord == 2
         assert new_key.level == 2
 
     @pytest.mark.parametrize(
@@ -268,8 +268,8 @@ class TestPetzMap:
         A = (1.5, 1)
         B = (2.5, 1)
         petz_map = PetzMap(
-            key_A=A,
-            key_B=B,
+            key_A=LatticeKey(*A),
+            key_B=LatticeKey(*B),
             density_matrix_A=density_matrix_1,
             density_matrix_B=density_matrix_2,
             precomputed_sqrt_or_log_of_density_matrix_A=precomp_dens_A,
@@ -279,7 +279,7 @@ class TestPetzMap:
         rho_AB = petz_map.get_combined_system()
         new_key = petz_map.get_new_key()
         assert np.allclose(rho_AB, petz_map_result)
-        assert new_key.n == 2
+        assert new_key.coord == 2
         assert new_key.level == 2
 
     @pytest.mark.parametrize(
@@ -311,8 +311,8 @@ class TestPetzMap:
         precomp_dens_B = np_sqrt(density_matrix_2)
 
         p_map = PetzMap(
-            key_A=A,
-            key_B=B,
+            key_A=LatticeKey(*A),
+            key_B=LatticeKey(*B),
             density_matrix_A=density_matrix_1,
             density_matrix_B=density_matrix_2,
             precomputed_sqrt_or_log_of_density_matrix_A=precomp_dens_A,
@@ -354,8 +354,8 @@ class TestPetzMap:
         for ell in range(system_size - 1):
             new_system = []
             for n in range(system_size - ell - 1):
-                key_A = (n + ell / 2, ell)
-                key_B = (n + ell / 2 + 1, ell)
+                key_A = LatticeKey(n + ell / 2, ell)
+                key_B = LatticeKey(n + ell / 2 + 1, ell)
                 petz_map = PetzMap(
                     key_A=key_A,
                     key_B=key_B,

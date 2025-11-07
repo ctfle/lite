@@ -8,14 +8,13 @@ from pathlib import Path
 import numpy as np
 import yaml
 
-from local_information.state.state_helper_funcs import add_higher_level_site
-
-from local_information.lattice.lattice_dict import LatticeDict
-from local_information.state.state_helper_funcs import (
+from local_information.lattice.lattice_dict import LatticeDict, LatticeKey
+from local_information.state.state_utils import (
     total_information,
     check_density_matrix_sequence,
     check_level_overhead,
     get_largest_dim,
+    add_higher_level_site,
 )
 
 from local_information.state.build.build_finite_state import get_finite_state
@@ -71,9 +70,8 @@ class State:
         self.loaded_state = loaded_state
 
         # compute the center of the operators
-        n_values = self.density_matrix.n_at_level(self.dyn_max_l)
         if not self.loaded_state:
-            self.anchor = np.mean(n_values)
+            self.anchor = np.mean(self.density_matrix.coords_at_level(self.dyn_max_l))
         else:
             self.anchor = anchor
 
@@ -178,7 +176,8 @@ class State:
         level_overhead: int = 1,
     ) -> State:
         """
-        :param Sequence[Sequence[np.ndarray]] density_matrix_list: list of lists of np.ndarray indicating structure and asymptotically
+        :param Sequence[Sequence[np.ndarray]] density_matrix_list: list of lists of np.ndarray indicating structure and
+                    asymptotically
                     invariant part: [[bulk], [boundary]]
         :param int level_overhead: controls the level-overhead: the density matrices are build at a level controlled by
                     the level of largest input matrix plus the level_overhead. For example if the largest matrix is
@@ -363,8 +362,8 @@ class State:
 
                 if pop_boundary:
                     n_min, n_max = self.density_matrix.boundaries(ell - 1)
-                    self.density_matrix.pop((n_max, ell - 1), None)
-                    self.density_matrix.pop((n_min, ell - 1), None)
+                    self.density_matrix.pop(LatticeKey(n_max, ell - 1), None)
+                    self.density_matrix.pop(LatticeKey(n_min, ell - 1), None)
             self.dyn_max_l = level
 
     def enlarge_left(self, nr_of_sites: int):
@@ -387,26 +386,26 @@ class State:
         for j in range(self.dyn_max_l):
             # add site at the right end
             lower_boundary_density_matrix = ptrace(
-                self.density_matrix[(n_max, self.dyn_max_l)],
+                self.density_matrix[LatticeKey(n_max, self.dyn_max_l)],
                 self.dyn_max_l - j,
                 end="left",
             )
 
             lower_level_n_r = n_max + 0.5 * (self.dyn_max_l - j)
             if j == 0:
-                temp_dict[(lower_level_n_r + 1, j)] = (
+                temp_dict[LatticeKey(lower_level_n_r + 1, j)] = (
                     self._state_boundary.lowest_level_right
                 )
 
-            temp_dict[(lower_level_n_r, j)] = lower_boundary_density_matrix
+            temp_dict[LatticeKey(lower_level_n_r, j)] = lower_boundary_density_matrix
             temp_dict += add_higher_level_site(
                 input_lattice=temp_dict,
-                key=(lower_level_n_r, j),
-                next_key=(lower_level_n_r + 1, j),
+                key=LatticeKey(lower_level_n_r, j),
+                next_key=LatticeKey(lower_level_n_r + 1, j),
             )
 
-        self.density_matrix[(n_max + 1, self.dyn_max_l)] = temp_dict[
-            (n_max + 1, self.dyn_max_l)
+        self.density_matrix[LatticeKey(n_max + 1, self.dyn_max_l)] = temp_dict[
+            LatticeKey(n_max + 1, self.dyn_max_l)
         ]
 
     def _attach_site_left(self):
@@ -418,7 +417,7 @@ class State:
         for j in range(self.dyn_max_l):
             # add site at the left end
             lower_boundary_density_matrix = ptrace(
-                self.density_matrix[(n_min, self.dyn_max_l)],
+                self.density_matrix[LatticeKey(n_min, self.dyn_max_l)],
                 self.dyn_max_l - j,
                 "right",
             )
@@ -426,19 +425,19 @@ class State:
             lower_level_n_l = n_min - 0.5 * (self.dyn_max_l - j)
 
             if j == 0:
-                temp_dict[(lower_level_n_l - 1, j)] = (
+                temp_dict[LatticeKey(lower_level_n_l - 1, j)] = (
                     self._state_boundary.lowest_level_left
                 )
 
-            temp_dict[(lower_level_n_l, j)] = lower_boundary_density_matrix
+            temp_dict[LatticeKey(lower_level_n_l, j)] = lower_boundary_density_matrix
             temp_dict += add_higher_level_site(
                 input_lattice=temp_dict,
-                key=(lower_level_n_l - 1, j),
-                next_key=(lower_level_n_l, j),
+                key=LatticeKey(lower_level_n_l - 1, j),
+                next_key=LatticeKey(lower_level_n_l, j),
             )
 
-        self.density_matrix[(n_min - 1, self.dyn_max_l)] = temp_dict[
-            (n_min - 1, self.dyn_max_l)
+        self.density_matrix[LatticeKey(n_min - 1, self.dyn_max_l)] = temp_dict[
+            LatticeKey(n_min - 1, self.dyn_max_l)
         ]
 
     def check_convergence(
@@ -451,18 +450,18 @@ class State:
         infinite temp density matrix and delete if difference is acceptable.
         """
         for _ in range(sites_to_check_left):
-            left_most = self.density_matrix.smallest_at_level(self.dyn_max_l)
-            if self.norm_difference(left_most, end="left") < tolerance:
+            left_most = self.density_matrix.leftmost_key_at_level(self.dyn_max_l)
+            if self.norm_difference(left_most.coord, end="left") < tolerance:
                 # delete leftmost
-                self.density_matrix.pop((left_most, self.dyn_max_l), None)
+                self.density_matrix.pop(left_most, None)
             else:
                 break
 
         for _ in range(sites_to_check_right):
-            right_most = self.density_matrix.largest_at_level(self.dyn_max_l)
-            if self.norm_difference(right_most, end="right") < tolerance:
+            right_most = self.density_matrix.rightmost_key_at_level(self.dyn_max_l)
+            if self.norm_difference(right_most.coord, end="right") < tolerance:
                 # delete rightmost
-                self.density_matrix.pop((right_most, self.dyn_max_l), None)
+                self.density_matrix.pop(right_most, None)
             else:
                 break
 
@@ -477,12 +476,12 @@ class State:
         """
         if end == "left":
             lowest_level = ptrace(
-                self.density_matrix[(n_value, self.dyn_max_l)], self.dyn_max_l, "right"
+                self.density_matrix[LatticeKey(n_value, self.dyn_max_l)], self.dyn_max_l, "right"
             )
             boundary_density_matrix = self._state_boundary.lowest_level_left
         elif end == "right":
             lowest_level = ptrace(
-                self.density_matrix[(n_value, self.dyn_max_l)], self.dyn_max_l, "left"
+                self.density_matrix[LatticeKey(n_value, self.dyn_max_l)], self.dyn_max_l, "left"
             )
             boundary_density_matrix = self._state_boundary.lowest_level_right
         else:

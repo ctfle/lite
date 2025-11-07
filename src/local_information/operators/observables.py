@@ -35,18 +35,16 @@ def diff_length(density_matrix: LatticeDict, operator: SystemOperator):
     expt_val_position = 0.0
 
     for key, rho in density_matrix.items_at_level(operator.range_):
-        n = key[0]
         expt_val_n = np.trace(rho @ operator.operator[key].toarray())
-        expt_val_position += n * expt_val_n
+        expt_val_position += key.coord * expt_val_n
         expt_val_H += expt_val_n
 
     expt_val_position /= expt_val_H
 
     for key, rho in density_matrix.items_at_level(operator.range_):
-        n = key[0]
         expt_val_n = np.trace(rho @ operator.operator[key].toarray())
-        diff_length_part1 += (n - expt_val_position) ** 2 * expt_val_n
-        diff_length_part2 += (n - expt_val_position) * expt_val_n
+        diff_length_part1 += (key.coord - expt_val_position) ** 2 * expt_val_n
+        diff_length_part2 += (key.coord - expt_val_position) * expt_val_n
 
     return diff_length_part1 / expt_val_H - (diff_length_part2 / expt_val_H) ** 2
 
@@ -86,19 +84,18 @@ def diff_const(density_matrix: LatticeDict, state: State, operator: SystemOperat
             )
 
     for key, rho in density_matrix.items_at_level(operator.range_):
-        n = key[0]
         # compute the Hamiltonian commutators
         commutator_dict = operator.energy_current[key]
         for k in commutator_dict:
             if k in density_matrix:
                 expt_val_comm = 1j * np.trace(density_matrix[k] @ commutator_dict[k])
-                diff_const_part1 += (n - n0) ** 2 * expt_val_comm
-                diff_const_part2_2 += (n - n0) * expt_val_comm
+                diff_const_part1 += (key.coord - n0) ** 2 * expt_val_comm
+                diff_const_part2_2 += (key.coord - n0) * expt_val_comm
 
         expt_val_n = np.trace(rho @ operator.operator[key].toarray())
         expt_val_H += expt_val_n
 
-        diff_const_part2_1 += 2 * (n - n0) * expt_val_n
+        diff_const_part2_1 += 2 * (key.coord - n0) * expt_val_n
 
     # the factor 0.5 is convention
     return 0.5 * (
@@ -143,19 +140,18 @@ def onsite_operator_diff_const(
     # compute the largest ell value
 
     for key, rho in density_matrix.items_at_level(0):
-        n = key[0]
         # compute the Hamiltonian commutators
         commutator_dict = operator_current[key]
         for k in commutator_dict:
             if k in rho:
                 expt_val_comm = 1j * np.trace(rho[k] @ commutator_dict[k])
-                diff_const_part1 += (n - n0) ** 2 * expt_val_comm
-                diff_const_part2_2 += (n - n0) * expt_val_comm
+                diff_const_part1 += (key.coord - n0) ** 2 * expt_val_comm
+                diff_const_part2_2 += (key.coord - n0) * expt_val_comm
 
         expt_val_n = np.trace(rho @ operator[key].toarray())
         expt_val_O += expt_val_n
 
-        diff_const_part2_1 += 2 * (n - n0) * expt_val_n
+        diff_const_part2_1 += 2 * (key.coord - n0) * expt_val_n
 
     diff_const = (
         diff_const_part1 / expt_val_O
@@ -241,7 +237,7 @@ def energy_current_mixedFieldIsing(density_matrix: LatticeDict) -> np.ndarray:
     current = np.zeros(int(n_max - n_min), dtype=np.complex128)
 
     for n_count, (first_key, first_rho) in enumerate(density_matrix.items_at_level(1)):
-        second_key = (first_key[0] + 1, first_key[1])
+        second_key = (first_key.coord + 1, first_key.level)
         second_rho = density_matrix[second_key]
         current[n_count] = np.trace(first_term @ first_rho) - np.trace(
             second_term @ second_rho

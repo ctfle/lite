@@ -129,7 +129,7 @@ class TestBuildFinite:
     def test_get_finite_state_correct_lower_level_density_matrices(
         self, input_density_matrix, length, input_level, build_level
     ):
-        dedeuced_keys = get_non_overlaping_keys(input_level, length)
+        deduced_keys = get_non_overlapping_keys(input_level, length)
         density_matrix_sequence = [input_density_matrix for _ in range(length)]
         state_dict, state_level = get_finite_state(
             density_matrix_sequence, max_l=build_level
@@ -143,7 +143,7 @@ class TestBuildFinite:
             level -= 1
 
         for key, density_matrix in lower_level.items():
-            if key in dedeuced_keys:
+            if key in deduced_keys:
                 assert np.allclose(density_matrix, input_density_matrix)
 
     @pytest.mark.parametrize(
@@ -180,7 +180,7 @@ class TestBuildFinite:
         initial sequence of density matrices are equal in this tests
         """
         length = len(random_density_matrix_sequence)
-        dedeuced_keys = get_non_overlaping_keys(input_level, length)
+        deduced_keys = get_non_overlapping_keys(input_level, length)
         state_dict, state_level = get_finite_state(
             random_density_matrix_sequence, max_l=build_level
         )
@@ -193,7 +193,7 @@ class TestBuildFinite:
             level -= 1
 
         for i, (key, density_matrix) in enumerate(lower_level.items()):
-            if key in dedeuced_keys:
+            if key in deduced_keys:
                 assert np.allclose(density_matrix, random_density_matrix_sequence[0])
 
     @pytest.mark.parametrize(
@@ -230,7 +230,7 @@ class TestBuildFinite:
         initial sequence of density matrices are equal in this tests
         """
         length = len(sequence_of_different_random_density_matrices)
-        dedeuced_keys = get_non_overlaping_keys(input_level, length)
+        deduced_keys = get_non_overlapping_keys(input_level, length)
         state_dict, state_level = get_finite_state(
             sequence_of_different_random_density_matrices, max_l=build_level
         )
@@ -244,7 +244,7 @@ class TestBuildFinite:
 
         i = 0
         for key, density_matrix in lower_level.items():
-            if key in dedeuced_keys:
+            if key in deduced_keys:
                 assert np.allclose(
                     density_matrix, sequence_of_different_random_density_matrices[i]
                 )

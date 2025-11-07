@@ -10,7 +10,7 @@ from unittest.mock import patch
 from local_information.operators.hamiltonian import Hamiltonian
 from local_information.state.state import State
 from local_information.config.monitor import DataConfig, DataContainer
-from local_information.lattice.lattice_dict import LatticeDict
+from local_information.lattice.lattice_dict import LatticeDict, keys_from_iterable
 from local_information.config.monitor import DefaultObservables
 
 
@@ -316,7 +316,7 @@ class TestData:
         )
         test_rho_dict = LatticeDict()
         for i in range(10):
-            keys = [(1, 2), (3, 4), (4, 5), (6, 7)]
+            keys = keys_from_iterable([(1, 2), (3, 4), (4, 5), (6, 7)])
             values = [1.1 + i, 1.2 + i, 1.3 + i, 1.4 + i]
             info_lattice = LatticeDict(zip(keys, values))
             get_information_lattice.return_value = info_lattice

@@ -6,7 +6,7 @@ from scipy.stats import unitary_group
 from local_information.core.minimization.minimization import *
 from local_information.core.utils import information_gradient
 from local_information.operators.hamiltonian import Hamiltonian
-from local_information.lattice.lattice_dict import LatticeDict
+from local_information.lattice.lattice_dict import LatticeDict, keys_from_iterable
 from local_information.config.config import TimeEvolutionConfig
 from local_information.state.state import State
 from local_information.typedefs import SystemOperator
@@ -28,7 +28,7 @@ class TestMinimization:
         mock.__getitem__.return_value = density_matrix
         mock.boundaries.return_value = (n_min, n_max)
         n_values = np.arange(n_min, n_max + 1)
-        keys = [(j, level) for j in n_values]
+        keys = keys_from_iterable([(j, level) for j in n_values])
         vals = [density_matrix for _ in range(len(n_values))]
 
         mock.keys.return_value = [(j, level) for j in np.arange(n_min, n_max + 1)]
@@ -71,7 +71,7 @@ class TestMinimization:
                 random_unitary.conj().T @ random_density_matrix @ random_unitary
             )
             density_matrices.append(random_density_matrix)
-            keys.append((n + 0.5 * level, level))
+            keys.append(LatticeKey(n + 0.5 * level, level))
 
         return LatticeDict.from_list(keys, density_matrices)
 
@@ -121,7 +121,9 @@ class TestMinimization:
     ):
         """tests that minimization yields the correct result"""
         dens_mat = [density_matrix for _ in range(number_of_matrices)]
-        keys = [(n + level * 0.5, level) for n in range(number_of_matrices)]
+        keys = keys_from_iterable(
+            [(n + level * 0.5, level) for n in range(number_of_matrices)]
+        )
         density_matrix_dict = LatticeDict.from_list(keys, dens_mat)
         state = State(density_matrix_dict)
         minimizer = self.get_minimizer(hamiltonian=random_hamiltonian, level=level)

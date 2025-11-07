@@ -1,5 +1,4 @@
 import pytest
-import numpy as np
 from local_information.state.build.build_finite_state import *
 from local_information.state.build.build_repeated_elements import get_boundaries
 from local_information.state.build.build_finite_state import get_finite_state
@@ -104,7 +103,7 @@ class TestBuildBulkBoundaryConcatenation:
             level -= 1
 
         # tests the system is contiguous
-        n_values = lower_level.n_at_level(0)
+        n_values = lower_level.coords_at_level(0)
         for j in range(len(n_values)):
             assert j in n_values
 
@@ -175,7 +174,7 @@ class TestBuildBulkBoundaryConcatenation:
         keys = list(combined.keys_at_level(build_level))
         n_min, n_max = combined.boundaries(build_level)
         for n in np.arange(n_min, n_max + 1):
-            assert (n, build_level) in keys
+            assert LatticeKey(n, build_level) in keys
 
         level = build_level
         while level > 0:
@@ -183,7 +182,7 @@ class TestBuildBulkBoundaryConcatenation:
             level -= 1
 
         # tests the system is contiguous
-        n_values = combined.n_at_level(0)
+        n_values = combined.coords_at_level(0)
         for j in range(len(n_values)):
             assert j in n_values
 

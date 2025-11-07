@@ -6,7 +6,7 @@ mpirun -n 2 python -m pytest --with-mpi test_distribute_mpi.py
 import numpy as np
 import pytest
 
-from local_information.lattice.lattice_dict import LatticeDict
+from local_information.lattice.lattice_dict import LatticeDict, LatticeKey
 from local_information.mpi.distribute import Distributor
 from local_information.mpi.mpi_setup import RANK, SIZE, print_mpi
 
@@ -19,7 +19,7 @@ class TestScatterGather:
     def random_lattice(self, request):
         size, level = request.param
         random_matrix_dict = {
-            (n, level): np.random.uniform(size=(2 ** (level + 1), 2 ** (level + 1)))
+            LatticeKey(n, level): np.random.uniform(size=(2 ** (level + 1), 2 ** (level + 1)))
             for n in range(size)
         }
         return LatticeDict.from_dict(random_matrix_dict)
@@ -28,13 +28,13 @@ class TestScatterGather:
     def multi_level_random_lattice(self, request):
         size, level = request.param
         random_matrix_dict = {
-            (n, level): np.random.uniform(size=(2 ** (level + 1), 2 ** (level + 1)))
+            LatticeKey(n, level): np.random.uniform(size=(2 ** (level + 1), 2 ** (level + 1)))
             for n in range(size)
         }
         lattice_at_level = LatticeDict.from_dict(random_matrix_dict)
 
         random_matrix_dict_higher_level = {
-            (n + 0.5, level + 1): np.random.uniform(
+           LatticeKey (n + 0.5, level + 1): np.random.uniform(
                 size=(2 ** (level + 1), 2 ** (level + 1))
             )
             for n in range(size - 1)
@@ -128,4 +128,4 @@ class TestScatterGather:
         # check that each worker has a lattice dict with keys and values of the original LatticeDict
         # where each key is associated with the specified level
         for key, value in lattice_on_worker.items():
-            assert key[1] == level
+            assert key.level == level

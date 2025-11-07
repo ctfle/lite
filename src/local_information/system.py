@@ -411,7 +411,7 @@ class System(ABC):
         Check that the Hamiltonian is at least defined over the whole operator
         """
         ell = self.dyn_max_l
-        assert ell == list(self.state.density_matrix.keys())[0][1]
+        assert ell == list(self.state.density_matrix.keys())[0].level
         n_min = self.state.density_matrix.smallest_at_level(ell)
         n_max = self.state.density_matrix.largest_at_level(ell)
         N = n_max - n_min

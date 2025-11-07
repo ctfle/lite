@@ -4,14 +4,14 @@ import logging
 from copy import deepcopy
 from dataclasses import dataclass
 from functools import cached_property
-from typing import TYPE_CHECKING, Dict
+from typing import TYPE_CHECKING
 
 import numpy as np
 from quspin.basis import spin_basis_1d
 from quspin.operators import hamiltonian
 from scipy import sparse
 
-from local_information.lattice.lattice_dict import LatticeDict
+from local_information.lattice.lattice_dict import LatticeDict, LatticeKey
 
 if TYPE_CHECKING:
     from numbers import Number
@@ -53,12 +53,17 @@ class Operator:
         expt_val_dict = LatticeDict()
         expt_val = 0.0
         if RANK == 0:
-            n_min, n_max = rho_dict.boundaries(self.range_)
-            for n in np.arange(n_min, n_max + 1):
-                key = (n, self.range_)
+            for key in rho_dict.keys_at_level(self.range_):
                 value = np.trace(rho_dict[key] @ self.operator[key].toarray())
                 expt_val_dict[key] = value
                 expt_val += value
+            # n_min, n_max = rho_dict.boundaries(self.range_)
+            # for n in np.arange(n_min, n_max + 1):
+            #     key = LatticeKey(n, self.range_)
+            #     print(key)
+            #     value = np.trace(rho_dict[key] @ self.operator[key].toarray())
+            #     expt_val_dict[key] = value
+            #     expt_val += value
 
         expt_val_dict = COMM.bcast(expt_val_dict, root=0)
         expt_val = COMM.bcast(expt_val, root=0)
@@ -116,7 +121,7 @@ class Operator:
             ham = construct_hamiltonian(
                 n + self.range_ + 1, operator_couplings, n_min=n
             )
-            H_n[(n + self.range_ / 2, self.range_)] = ham.tocsr()
+            H_n[LatticeKey(n + self.range_ / 2, self.range_)] = ham.tocsr()
 
         return H_n
 
@@ -246,7 +251,7 @@ def construct_operator_dict(
         for n in range(int(system_size - ell)):
             # construct operators for n_min= n and n_max = n_min + _ell_ +1
             ham = construct_hamiltonian(n + ell + 1, operator_couplings, n_min=n)
-            hamiltonian_dict[(n + ell / 2, ell)] = ham.tocsr()
+            hamiltonian_dict[LatticeKey(n + ell / 2, ell)] = ham.tocsr()
 
     return hamiltonian_dict
 
@@ -313,7 +318,7 @@ def get_couplings(operator_couplings: Coupling, n_max: int, n_min: int) -> Coupl
     return couplings
 
 
-def compute_HH_commutator(H_n_dict: LatticeDict, key: tuple) -> LatticeDict:
+def compute_HH_commutator(H_n_dict: LatticeDict, key: LatticeKey) -> LatticeDict:
     """
     Function to compute the commutator of the local Hamiltonian with key=(n,ell)
     """
@@ -322,11 +327,12 @@ def compute_HH_commutator(H_n_dict: LatticeDict, key: tuple) -> LatticeDict:
     # @param key for which to compute the commutator, i.e., key -> h^ell_n to compute [H,h^ell_n]
 
     # range of Hamiltonian + range of operator + 1
-    n, ell = key
+    n = key.coord
+    ell = key.level
     reference_hamiltonian = H_n_dict[key]
     commutator_dict = LatticeDict()
     for l_ in range(2 * int(ell) + 1):
-        k = (n - ell + l_, ell)
+        k = LatticeKey(n - ell + l_, ell)
 
         if k in H_n_dict:
             if ell - l_ > 0:
@@ -335,7 +341,7 @@ def compute_HH_commutator(H_n_dict: LatticeDict, key: tuple) -> LatticeDict:
                 a = ell - l_
                 hamiltonian = add_spins(H_n_dict[k], a, "right")
                 ref_ham = add_spins(reference_hamiltonian, a, "left")
-                commutator_dict[(n - a + a / 2, ell + a)] = (
+                commutator_dict[LatticeKey(n - a + a / 2, ell + a)] = (
                     hamiltonian @ ref_ham - ref_ham @ hamiltonian
                 )
 
@@ -349,7 +355,7 @@ def compute_HH_commutator(H_n_dict: LatticeDict, key: tuple) -> LatticeDict:
                 a = -(ell - l_)
                 hamiltonian = add_spins(H_n_dict[k], a, "left")
                 ref_ham = add_spins(reference_hamiltonian, a, "right")
-                commutator_dict[(n + a - a / 2, ell + a)] = (
+                commutator_dict[LatticeKey(n + a - a / 2, ell + a)] = (
                     hamiltonian @ ref_ham - ref_ham @ hamiltonian
                 )
         else:
@@ -358,7 +364,9 @@ def compute_HH_commutator(H_n_dict: LatticeDict, key: tuple) -> LatticeDict:
     return commutator_dict
 
 
-def compute_H_onsite_operator_commutator(H_n_dict, operator_dict, key, range_):
+def compute_H_onsite_operator_commutator(
+    H_n_dict: LatticeDict, operator_dict: LatticeDict, key: LatticeKey, range_: int
+):
     """
     Function to compute the commutator of the Hamiltonian with an onsite
     Operator at key=(n,ell)
@@ -370,13 +378,14 @@ def compute_H_onsite_operator_commutator(H_n_dict, operator_dict, key, range_):
     # @param range_ range of the Hamiltonian
 
     # key of the operator: where to compute the commutator with the Hamiltonian
-    n, ell = key
+    n = key.coord
+    ell = key.level
     reference_operator = operator_dict[key]
     commutator_dict = LatticeDict()
 
     # in general: range of Hamiltonian + range of operator + 1
     for l_ in range(int(range_) + 1):
-        k = (n - range_ / 2 + l_, range_)
+        k = LatticeKey(n - range_ / 2 + l_, range_)
 
         if k in H_n_dict:
             # add sites on the right and the left to ensure same dimensions
@@ -401,9 +410,7 @@ def add_spins(operator, number, orientation: str):
     # @param number number of 2x2 identities to enlarge the Hilbert-space
     # @param orientation allowed values 'left' or 'right' to add the identities
     #
-    if isinstance(operator, np.ndarray):
-        pass
-    else:
+    if not isinstance(operator, np.ndarray):
         operator = operator.toarray()
 
     if orientation == "left":
@@ -457,27 +464,27 @@ def check_lindbladian(
 
 def construct_lindbladian_dict(
     jump_couplings: Coupling, max_l: int, range_: int, system_size: int
-) -> Dict:
+) -> dict[LatticeKey, list[tuple[str, float] | None]]:
     """
-    Constructs a dictionary that holds the information which on-site Lindblad operator to apply where
+    Constructs a dictionary that holds the information which on-site Lindblad operator to apply where.
     """
     lindbladian_dict = dict()
     for ell in range(max_l + range_ + 1):
         # contains ell + 1  spins: ell = 0 means single spin operators,
         for n in range(int(system_size - ell)):
-            # transform the input jump_couplings into the form n_min= n and n_max = n_min + _ell_ +1
+            # transform the input jump_couplings into the form n_min = n and n_max = n_min + _ell_ +1
             # i.e. all the physical sites that are included in the triangle with (n + ell / 2, ell) as top
             lindbald_identifier = construct_lindbladian_id(
                 n + ell + 1, jump_couplings, n_min=n
             )
-            lindbladian_dict[(n + ell / 2, ell)] = lindbald_identifier
+            lindbladian_dict[LatticeKey(n + ell / 2, ell)] = lindbald_identifier
 
     return lindbladian_dict
 
 
 def construct_lindbladian_id(
     n_max: int, jump_couplings: Coupling, n_min: int = 0
-) -> list:
+) -> list[tuple[str, float] | None]:
     """
     Construct the Lindbladian id for the operators from n_min to n_max.
     """
@@ -499,10 +506,12 @@ def construct_lindbladian_id(
     return id_list
 
 
-def setup_onsite_L_operators(max_l: int, range_: int, type_list: list) -> LatticeDict:
+def setup_onsite_L_operators(
+    max_l: int, range_: int, type_list: list[str]
+) -> LatticeDict:
     """
-    Construct all basic onsite Lindblad operators up to level max_l + range_. Keys are tuples of length 3:
-    (extend, m, type) where m is the site where the operator acts, extend: over which we construct the operator,
+    Construct all basic onsite Lindblad operators up to level max_l + range_. Keys are LatticeKey's with name:
+    LatticeKey(level, m, type) where m is the site where the operator acts, level: over which we construct the operator,
     type: what kind of operator. I.e. generates a LatticeDict with all possible single particle Lindblad operators
     projected to larger Hilbert spaces
     """
@@ -521,7 +530,9 @@ def setup_onsite_L_operators(max_l: int, range_: int, type_list: list) -> Lattic
         for m in range(ell + 1):
             for tpe in type_list:
                 if ell == 0:
-                    L_operators[(ell, m, tpe)] = sparse.csr_matrix(basic_operators[tpe])
+                    L_operators[LatticeKey(level=ell, coord=m, name=tpe)] = (
+                        sparse.csr_matrix(basic_operators[tpe])
+                    )
                 else:
                     if m == 0:
                         operator = np.kron(
@@ -541,6 +552,8 @@ def setup_onsite_L_operators(max_l: int, range_: int, type_list: list) -> Lattic
                             ),
                         )
 
-                    L_operators[(ell, m, tpe)] = sparse.csr_matrix(operator)
+                    L_operators[LatticeKey(level=ell, coord=m, name=tpe)] = (
+                        sparse.csr_matrix(operator)
+                    )
 
     return L_operators

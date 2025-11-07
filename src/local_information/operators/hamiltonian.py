@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 import yaml
 
-from local_information.lattice.lattice_dict import LatticeDict
+from local_information.lattice.lattice_dict import LatticeDict, LatticeKey
 from local_information.operators.operator import (
     construct_operator_dict,
     compute_H_onsite_operator_commutator,
@@ -65,11 +65,11 @@ class Hamiltonian(Operator):
         return op_current
 
     @cached_property
-    def energy_current(self) -> dict[tuple[float, int], LatticeDict]:
+    def energy_current(self) -> dict[LatticeKey, LatticeDict]:
         """
         Computes the commutator of the Hamiltonian with each of its decomposed local elements.
         """
-        e_current: dict[tuple[float, int], LatticeDict] = {}
+        e_current: dict[LatticeKey, LatticeDict] = {}
         for key in self.operator.keys_at_level(self.range_):
             e_current[key] = compute_HH_commutator(self.operator, key)
 

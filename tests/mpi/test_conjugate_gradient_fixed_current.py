@@ -37,7 +37,7 @@ class TestConjugateGradientWithMPI:
         # get the first element of each list starting from the first list
         first_key_of_each_RANK = list(map(lambda x: x[0], split_keys[1:]))
         keys_to_exclude = list(
-            map(lambda x: (x[0] - 0.5, x[1] - 1), first_key_of_each_RANK)
+            map(lambda x: x.get_lower_level_left(), first_key_of_each_RANK)
         )
         _, mut_info_init = compute_mutual_information_at_level(
             random_lattice_dict, level

@@ -7,10 +7,10 @@ import numpy as np
 
 from local_information.core.petz_map import ptrace
 from local_information.core.utils import arctanh, commutator, np_logm
-from local_information.lattice.lattice_dict import LatticeDict
+from local_information.lattice.lattice_dict import LatticeDict, LatticeKey
 
 if TYPE_CHECKING:
-    from local_information.typedefs import SystemOperator, LatticeDictKeyTuple
+    from local_information.typedefs import SystemOperator
 logger = logging.getLogger()
 
 
@@ -19,7 +19,7 @@ class Projector:
         self,
         system_operator: SystemOperator,
         density_matrix_dict: LatticeDict,
-        eigen_dict: dict[LatticeDictKeyTuple, tuple[np.ndarray, np.ndarray]],
+        eigen_dict: dict[LatticeKey, tuple[np.ndarray, np.ndarray]],
     ):
         """
         eigen_dict here contains eigenvalues and eigenvectors associated with the density matrices
@@ -37,13 +37,13 @@ class Projector:
     def range_(self) -> int:
         return self._system_operator.range_
 
-    def _eigen_vectors(self, key: tuple[float, int]) -> np.ndarray:
+    def _eigen_vectors(self, key: LatticeKey) -> np.ndarray:
         return self._eigen_dict[key][1]
 
-    def _eigen_values(self, key: tuple[float, int]) -> np.ndarray:
+    def _eigen_values(self, key: LatticeKey) -> np.ndarray:
         return self._eigen_dict[key][0]
 
-    def _get_hessian_matrix_elements(self, key: tuple[float, int]) -> np.ndarray:
+    def _get_hessian_matrix_elements(self, key: LatticeKey) -> np.ndarray:
         """
         Computes the elements h_ij that define the Hessian operator H; they're just a function of
         the eigenvalues of rho
@@ -72,7 +72,7 @@ class Projector:
 
         return matrix
 
-    def hessian(self, key: LatticeDictKeyTuple, x: np.ndarray) -> np.ndarray:
+    def hessian(self, key: LatticeKey, x: np.ndarray) -> np.ndarray:
         """
         Computes the Hessian of the information at level ell
         applied to the operator x given as np.ndarray
@@ -87,7 +87,7 @@ class Projector:
 
         return -1.0 * hessian_on_operator
 
-    def inverse_hessian(self, key: LatticeDictKeyTuple, x: np.ndarray) -> np.ndarray:
+    def inverse_hessian(self, key: LatticeKey, x: np.ndarray) -> np.ndarray:
         """
         Computes the inverse Hessian of the information at level ell
         applied to the operator x given as np.ndarray
@@ -102,7 +102,7 @@ class Projector:
 
         return -inverse_hessian
 
-    def entropy_gradient(self, key: LatticeDictKeyTuple) -> np.ndarray:
+    def entropy_gradient(self, key: LatticeKey) -> np.ndarray:
         """
         Computes the gradient of the entropy
         at level ell (i.e. -gradient of information al level ell)
@@ -137,7 +137,7 @@ class Projector:
 
     def _compute_current_operator_matrices(
         self,
-        key: LatticeDictKeyTuple,
+        key: LatticeKey,
     ) -> tuple[np.ndarray, np.ndarray]:
         """
         Computes the current operators as matrices.
@@ -145,24 +145,16 @@ class Projector:
         """
         # Note, to compute the f_n^l and g_n^l we need the rho_dict entries at level ell,
         # ell-1 and ell-2. Be sure to hand over the right rho_dict to this function
-        n, ell = key
-        if ell < 3:
+        if key.level < 3:
             raise ValueError(
                 "Ill-defined projectors: require at least level 3 density matrices for minimization"
             )
         else:
-            # info_gradient left requires to use the info_gradient matrix at n+1/2
-            n_r = key[0] + 0.5
-            key_r = (n_r, ell - 1)
-
-            n_l = key[0] - 0.5
-            key_l = (n_l, ell - 1)
-
             g_left = self._get_commutator_of_info_gradient_with_subsystem_hamiltonian(
-                key_r, "left"
+                key.get_lower_level_right(), "left"
             )  # 2x2 matrix is added on the left -> g_left∫
             g_right = self._get_commutator_of_info_gradient_with_subsystem_hamiltonian(
-                key_l, "right"
+                key.get_lower_level_left(), "right"
             )
 
             g_left = self.projector_to_trace_free_subspace(g_left)
@@ -170,7 +162,7 @@ class Projector:
 
         return g_left, g_right
 
-    def _get_relevant_info_gradient(self, key: LatticeDictKeyTuple):
+    def _get_relevant_info_gradient(self, key: LatticeKey):
         """
         This method computes - ln(\rho). In PRX QUANTUM 5, 020352
         we derive the gradient as - ln(\rho) - 1. The 1 is not necessary here since
@@ -179,7 +171,7 @@ class Projector:
         return -1 * np_logm(self._density_matrix_dict[key])
 
     def _get_commutator_of_info_gradient_with_subsystem_hamiltonian(
-        self, key: LatticeDictKeyTuple, orientation: str
+        self, key: LatticeKey, orientation: str
     ) -> np.ndarray:
         """computes the commutator of Eq. (25) of PRX QUANTUM 5, 020352"""
         H_c = self._system_operator.subsystem_hamiltonian[key]
@@ -189,8 +181,8 @@ class Projector:
             enlarged_inf_grad = np.kron(np.eye(2**self.range_) / 2, info_gradient)
 
             # get the subsystem Hamiltonian
-            key_ = (key[0] - 0.5 * self.range_, key[1] + self.range_)
-            H = self._system_operator.subsystem_hamiltonian[key_]
+            sub_key = LatticeKey(key.coord - 0.5 * self.range_, key.level + self.range_)
+            H = self._system_operator.subsystem_hamiltonian[sub_key]
 
             # compute the commutator
             com = commutator(enlarged_inf_grad, H.toarray())
@@ -206,8 +198,8 @@ class Projector:
             )
 
             # get the subsystem Hamiltonian
-            key_ = (key[0] + 0.5 * self.range_, key[1] + self.range_)
-            H = self._system_operator.subsystem_hamiltonian[key_]
+            sub_key = LatticeKey(key.coord + 0.5 * self.range_, key.level + self.range_)
+            H = self._system_operator.subsystem_hamiltonian[sub_key]
 
             # compute the commutators
             com = commutator(enlarged_inf_grad, H.toarray())
@@ -223,7 +215,7 @@ class Projector:
     def projector_to_trace_and_current_free_subspace(
         self,
         x: np.ndarray,
-        key: LatticeDictKeyTuple,
+        key: LatticeKey,
     ) -> np.ndarray:
         # project onto the trace-free space
         T_L_R = self.projector_to_trace_free_subspace(x)
@@ -246,7 +238,7 @@ class Projector:
         return P12
 
     def project_hessian_to_fixed_current(
-        self, key: LatticeDictKeyTuple, x: np.ndarray
+        self, key: LatticeKey, x: np.ndarray
     ) -> np.ndarray:
         """
         Computes the projected hessian (PHP)
@@ -260,7 +252,7 @@ class Projector:
             hessian_applied_to_projected_input, key
         )
 
-    def project_gradient_to_fixed_current(self, key: LatticeDictKeyTuple) -> np.ndarray:
+    def project_gradient_to_fixed_current(self, key: LatticeKey) -> np.ndarray:
         """
         Computes the gradient (P Nabla_rho S)
         """
@@ -269,7 +261,7 @@ class Projector:
         return self.projector_to_trace_and_current_free_subspace(grad, key)
 
     def precondition_to_fixed_current(
-        self, key: LatticeDictKeyTuple, x: np.ndarray
+        self, key: LatticeKey, x: np.ndarray
     ) -> np.ndarray:
         """
         Applies preconditioning operator to each side of the equation we aim to solve.

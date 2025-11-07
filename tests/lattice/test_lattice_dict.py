@@ -1,7 +1,11 @@
 import numpy as np
 import pytest
 
-from local_information.lattice.lattice_dict import LatticeDict
+from local_information.lattice.lattice_dict import (
+    LatticeDict,
+    keys_from_iterable,
+    LatticeKey,
+)
 
 
 class SomeArithmetic:
@@ -39,7 +43,7 @@ class TestLatticeDict:
                 [[0.997, 0, 0, 0], [0, 0.001, 0, 0], [0, 0, 0.001, 0], [0, 0, 0, 0.001]]
             )
         ]
-        keys = [(1, 1)]
+        keys = [LatticeKey(1, 1)]
         return LatticeDict.from_list(keys, vals)
 
     @pytest.fixture
@@ -49,7 +53,7 @@ class TestLatticeDict:
                 [[0.001, 0, 0, 0], [0, 0.997, 0, 0], [0, 0, 0.001, 0], [0, 0, 0, 0.001]]
             )
         ]
-        keys = [(1, 2)]
+        keys = [LatticeKey(1, 2)]
         return LatticeDict.from_list(keys, vals)
 
     @pytest.fixture
@@ -62,23 +66,25 @@ class TestLatticeDict:
                 [[0.001, 0, 0, 0], [0, 0.997, 0, 0], [0, 0, 0.001, 0], [0, 0, 0, 0.001]]
             ),
         ]
-        keys = [(1, 1), (1, 2)]
+        keys = keys_from_iterable([(1, 1), (1, 2)])
         return LatticeDict.from_list(keys, vals)
 
     @pytest.fixture
     def test_lattice_dict4(self):
         vals = [1.2, 3.4, 5.6, 6.7, 0.0, 1j, 1, 1, 1]
-        keys = [
-            (1, 2),
-            (2, 3),
-            (4, 5),
-            (4, 6),
-            (3, 6),
-            (10, 20),
-            (11, 7),
-            (12, 7),
-            (13, 7),
-        ]
+        keys = keys_from_iterable(
+            [
+                (1, 2),
+                (2, 3),
+                (4, 5),
+                (4, 6),
+                (3, 6),
+                (10, 20),
+                (11, 7),
+                (12, 7),
+                (13, 7),
+            ]
+        )
         return LatticeDict.from_list(keys, vals)
 
     def test_lattice_dict_sum(self, test_lattice_dict1, test_lattice_dict2):
@@ -137,12 +143,12 @@ class TestLatticeDict:
         assert list(test_lattice_dict4.keys_at_level(1)) == []
         level3 = list(test_lattice_dict4.keys_at_level(3))
         assert len(level3) == 1
-        assert level3[0][0] == 2
-        assert level3[0][1] == 3
+        assert level3[0].coord == 2
+        assert level3[0].level == 3
         level6 = list(test_lattice_dict4.keys_at_level(6))
         assert len(level6) == 2
-        assert (3, 6) in level6
-        assert (4, 6) in level6
+        assert LatticeKey(3, 6) in level6
+        assert LatticeKey(4, 6) in level6
 
     def test_merge(self, test_lattice_dict1, test_lattice_dict3):
         keys1 = test_lattice_dict1.keys()
@@ -154,32 +160,6 @@ class TestLatticeDict:
         for key, val in test_lattice_dict1.items():
             assert key in set(keys1).union(set(keys3))
 
-    def test_add_sites(self, test_lattice_dict4):
-        test_lattice_dict4.add_sites(2, TI_keys=[(1, 2)], orientation="right")
-        assert len(list(test_lattice_dict4.keys_at_level(2))) == 3
-        for key in test_lattice_dict4.keys_at_level(2):
-            assert test_lattice_dict4[key] == 1.2
-            assert key[0] in [1, 2, 3]
-
-        test_lattice_dict4.add_sites(2, TI_keys=[(1, 2)], orientation="left")
-        assert len(list(test_lattice_dict4.keys_at_level(2))) == 5
-        for key in test_lattice_dict4.keys_at_level(2):
-            assert test_lattice_dict4[key] == 1.2
-            assert key[0] in [-1, 0, 1, 2, 3]
-
-    def test_delete_sites(self, test_lattice_dict4):
-        initial_keys = list(test_lattice_dict4.keys_at_level(2))
-        test_lattice_dict4.add_sites(2, TI_keys=[(1, 2)], orientation="right")
-        test_lattice_dict4.add_sites(2, TI_keys=[(1, 2)], orientation="left")
-        test_lattice_dict4.delete_sites(delta_n=2, ell=2, orientation="right")
-        test_lattice_dict4.delete_sites(delta_n=2, ell=2, orientation="left")
-
-        for key in test_lattice_dict4.keys_at_level(2):
-            assert key in initial_keys
-            assert test_lattice_dict4[key] == 1.2
-
-        assert len(list(test_lattice_dict4.keys_at_level(2))) == len(list(initial_keys))
-
     def test_kill_all_except(self, test_lattice_dict4):
         test_lattice_dict4.kill_all_except(6)
         assert len(test_lattice_dict4.keys()) == 2
@@ -189,7 +169,7 @@ class TestLatticeDict:
 
         daggered_lattice = test_lattice_dict4.dagger()
         for key, val in daggered_lattice.items():
-            if key[0] == 10 and key[1] == 20:
+            if key.coord == 10 and key.level == 20:
                 assert val == -1j
             else:
                 assert val in values
@@ -213,20 +193,21 @@ class TestLatticeDict:
         assert test_lattice_dict4 != test_lattice_dict2
 
     def test_from_dict(self):
-        test_dict = {(1, 0): np.array([1, 2, 3]), (1, 1): np.array([4, 5, 6])}
+        test_dict = {
+            LatticeKey(1, 0): np.array([1, 2, 3]),
+            LatticeKey(1, 1): np.array([4, 5, 6]),
+        }
         lattice = LatticeDict.from_dict(test_dict)
         for key, value in lattice.items():
             assert np.allclose(test_dict[key], value)
-        pass
 
     def test_from_list(self):
-        keys = [(1, 0), (1, 1)]
+        keys = keys_from_iterable([(1, 0), (1, 1)])
         values = [1.2, 3.4]
         lattice = LatticeDict.from_list(keys, values)
         for key, value in lattice.items():
             assert key in keys
             assert value in values
-        pass
 
     def test_add(self, test_lattice_dict2, test_lattice_dict3):
         summed_dict = test_lattice_dict3 + test_lattice_dict2
@@ -235,35 +216,34 @@ class TestLatticeDict:
             assert np.allclose(
                 summed_dict[key], test_lattice_dict2[key] + test_lattice_dict3[key]
             )
-        pass
 
     def test_add_to_empty(self, test_lattice_dict3):
         summed_dict = LatticeDict()
         summed_dict += test_lattice_dict3
         for key, value in summed_dict.items():
             assert np.allclose(value, test_lattice_dict3[key])
-        pass
 
-    def test_settitem(self):
+    def test_settitem_fails_1(self):
         test_dict = LatticeDict()
         for i in range(10):
-            test_dict[(i, i + 1)] = 1.2 + i
-        assert test_dict[(0, 1)] == 1.2
-        assert test_dict[(9, 10)] == 1.2 + 9
+            test_dict[LatticeKey(i, i + 1)] = 1.2 + i
+        assert test_dict[LatticeKey(0, 1)] == 1.2
+        assert test_dict[LatticeKey(9, 10)] == 1.2 + 9
 
         test_dict = LatticeDict()
-        try:
-            for i in range(10):
-                test_dict[i] = 1
-        except TypeError:
-            pass
+        with pytest.raises(TypeError):
+            test_dict[i] = 1
+
+    def test_settitem_fails_2(self):
+        test_dict = LatticeDict()
+        for i in range(10):
+            test_dict[LatticeKey(i, i + 1)] = 1.2 + i
+        assert test_dict[LatticeKey(0, 1)] == 1.2
+        assert test_dict[LatticeKey(9, 10)] == 1.2 + 9
 
         test_dict = LatticeDict()
-        try:
-            for i in range(10):
-                test_dict[(i, i)] = "tests"
-        except TypeError:
-            pass
+        with pytest.raises(TypeError):
+            test_dict[(i, i)] = "test"
 
     def test_arithemtic_class(self):
         test_dict = LatticeDict()
@@ -271,55 +251,46 @@ class TestLatticeDict:
         assert test_dict._type is None
 
         for i in range(10):
-            test_dict[(i, i)] = SomeArithmetic()
+            test_dict[LatticeKey(i, i)] = SomeArithmetic()
         assert test_dict._type == SomeArithmetic
 
     def test_other_arithemtic_class(self):
         test_dict = LatticeDict()
         k = 10
         for i in range(k):
-            test_dict[(i, i)] = SomeArithmetic()
+            test_dict[LatticeKey(i, i)] = SomeArithmetic()
         assert test_dict._type == SomeArithmetic
-        try:
-            test_dict[(k, k)] = OtherArithmetic()
-            assert False
-        except TypeError:
-            pass
+        with pytest.raises(TypeError):
+            test_dict[LatticeKey(k, k)] = OtherArithmetic()
 
     def test_non_arithemtic_class(self):
         test_dict = LatticeDict()
-        try:
-            test_dict[(1, 2)] = NonArithmetic()
-            assert False
-        except TypeError:
-            pass
+        with pytest.raises(TypeError):
+            test_dict[LatticeKey(1, 2)] = NonArithmetic()
 
 
 class TestLatticeDictIterator:
     @pytest.fixture
     def test_lattice_dict(self) -> tuple[LatticeDict, list, list]:
         vals = [np.random.normal(size=(4, 4)) for _ in range(10)]
-        keys = [(n, 1) for n in range(10)]
+        keys = keys_from_iterable([(n, 1) for n in range(10)])
         return LatticeDict.from_list(keys, vals), vals, keys
 
     def test_values_at_level(self, test_lattice_dict):
         lattice, values, _ = test_lattice_dict
         for v, value in enumerate(lattice.values_at_level(1)):
             assert np.allclose(values[v], value)
-        pass
 
     def test_keys_at_level(self, test_lattice_dict):
         lattice, _, keys = test_lattice_dict
         for k, key in enumerate(lattice.keys_at_level(1)):
             assert key == keys[k]
-        pass
 
     def test_items_at_level(self, test_lattice_dict):
         lattice, values, keys = test_lattice_dict
         for k, (key, value) in enumerate(lattice.items_at_level(1)):
             assert key == keys[k]
             assert np.allclose(values[k], value)
-        pass
 
     def test_reuse(self, test_lattice_dict):
         lattice, values, keys = test_lattice_dict
@@ -346,8 +317,6 @@ class TestLatticeDictIterator:
             assert key == keys[k]
             assert np.allclose(values[k], value)
 
-        pass
-
     def test_empty(self, test_lattice_dict):
         lattice, _, _ = test_lattice_dict
         for _ in lattice.items_at_level(2):
@@ -356,4 +325,3 @@ class TestLatticeDictIterator:
             assert False
         for _ in lattice.values_at_level(2):
             assert False
-        pass

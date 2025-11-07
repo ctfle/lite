@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from local_information.core.utils import compute_lower_level
-from local_information.state.build.build_finite_state import get_non_overlaping_keys
+from local_information.state.build.build_finite_state import get_non_overlapping_keys
 from local_information.state.build.build_repeated_elements import (
     get_boundaries,
     get_repetitions,
@@ -70,7 +70,7 @@ class TestBuildRepeated:
         repetitions = get_repetitions(
             density_matrix_sites=input_level + 1, level=build_level
         )
-        dedeuced_keys = get_non_overlaping_keys(input_level, repetitions)
+        dedeuced_keys = get_non_overlapping_keys(input_level, repetitions)
 
         repeated_matrices = get_boundaries([random_density_matrix], max_l=build_level)
         assert repeated_matrices[0].get_max_level() == build_level
@@ -124,7 +124,7 @@ class TestBuildRepeated:
         repetitions = get_repetitions(
             density_matrix_sites=input_level + 1, level=build_level
         )
-        dedeuced_keys = get_non_overlaping_keys(input_level, repetitions)
+        dedeuced_keys = get_non_overlapping_keys(input_level, repetitions)
 
         repeated_matrices = get_boundaries(
             random_density_matrix_tuple, max_l=build_level

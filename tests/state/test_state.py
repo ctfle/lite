@@ -4,7 +4,7 @@ import shutil
 import numpy as np
 import pytest
 
-from local_information.lattice.lattice_dict import LatticeDict
+from local_information.lattice.lattice_dict import LatticeDict, keys_from_iterable
 from local_information.state.state import State
 
 
@@ -209,7 +209,7 @@ class TestState:
         boundaries = np.eye(4) / 4
         n_min, n_max = test_state_asymptotic.density_matrix.boundaries(1)
         for key, val in test_state_asymptotic.density_matrix.items_at_level(1):
-            if key[0] in [n_min, n_max]:
+            if key.coord in [n_min, n_max]:
                 assert np.allclose(val, boundaries)
         pass
 
@@ -225,13 +225,13 @@ class TestState:
         assert len(state.density_matrix.keys()) == 3 + 2 * level - level
         assert state.density_matrix.keys_at_level(level)
         for key, val in state.density_matrix.items():
-            assert key[1] == level
+            assert key.level == level
 
         # assert the boundaries have the right form
         boundary_term = np.eye(2 ** (level + 1)) / 2 ** (level + 1)
         n_min, n_max = state.density_matrix.boundaries(level)
         for key, val in state.density_matrix.items_at_level(level):
-            if key[0] in [n_min, n_max]:
+            if key.coord in [n_min, n_max]:
                 assert np.allclose(val, boundary_term)
 
     def test_inf_temp(self, test_state_inf_temp):
@@ -327,7 +327,7 @@ class TestState:
     )
     def test_reduce_level(self, density_matrix, lower_level, level, n_min, n_max):
         n_values = np.arange(n_min, n_max + 1)
-        keys = [(j, level) for j in n_values]
+        keys = keys_from_iterable([(j, level) for j in n_values])
         vals = [density_matrix for _ in range(len(n_values))]
         mock_rho_dict = LatticeDict.from_list(keys, vals)
         state = State(density_matrix=mock_rho_dict, case="finite")
@@ -375,7 +375,7 @@ class TestState:
         self, density_matrix, lower_level, level, n_min, n_max
     ):
         n_values = np.arange(n_min, n_max + 1)
-        keys = [(j, level) for j in n_values]
+        keys = keys_from_iterable([(j, level) for j in n_values])
         vals = [density_matrix for _ in range(len(n_values))]
         mock_rho_dict = LatticeDict.from_list(keys, vals)
         n_min_init, n_max_init = mock_rho_dict.boundaries(level)

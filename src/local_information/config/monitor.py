@@ -154,7 +154,7 @@ class DataContainer:
             # call the helper class to compute all default observables
             observable_result = self.get_default_observables(
                 observable=observable_name,
-                densitz_matrix=density_matrix,
+                density_matrix=density_matrix,
                 information_dict=information_dict,
                 state=state,
                 operator=operator,
@@ -326,14 +326,14 @@ class DefaultObservables:
     def __call__(
         self,
         observable: str,
-        densitz_matrix: LatticeDict,
+        density_matrix: LatticeDict,
         information_dict: LatticeDict,
         state: State,
         operator: SystemOperator,
     ) -> Union[None, Any]:
         self.state = state
         self.operator = operator
-        self.density_matrix = densitz_matrix
+        self.density_matrix = density_matrix
         self.information_dict = information_dict
 
         if observable in self.observables and RANK == 0:

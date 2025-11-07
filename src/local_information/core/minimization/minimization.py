@@ -12,12 +12,12 @@ from local_information.core.minimization.conjugate_gradient import (
 from local_information.core.minimization.projectors import Projector
 from local_information.core.utils import compute_lower_level
 from local_information.core.utils import compute_mutual_information_at_level
-from local_information.lattice.lattice_dict import LatticeDict
+from local_information.lattice.lattice_dict import LatticeDict, LatticeKey
 from local_information.mpi.mpi import MultiProcessing
 from local_information.mpi.mpi_setup import COMM, RANK, SIZE
 
 if TYPE_CHECKING:
-    from local_information.typedefs import SystemOperator, LatticeDictKeyTuple
+    from local_information.typedefs import SystemOperator
     from local_information.state.state import State
 logger = logging.getLogger()
 
@@ -143,7 +143,7 @@ class InformationMinimizer:
 
     @staticmethod
     def _check_eigenvalues(
-        eigen_dict: dict[LatticeDictKeyTuple, tuple[np.ndarray, np.ndarray]],
+        eigen_dict: dict[LatticeKey, tuple[np.ndarray, np.ndarray]],
     ):
         for key, (eigenvalues, _) in eigen_dict.items():
             if any(eigenvalues < 0):

@@ -13,7 +13,7 @@ from local_information.core.petz_map import (
     ptrace,
     information,
 )
-from local_information.lattice.lattice_dict import LatticeDict
+from local_information.lattice.lattice_dict import LatticeDict, LatticeKey
 from local_information.mpi.mpi import MultiProcessing
 from local_information.mpi.mpi_setup import COMM, RANK
 
@@ -80,7 +80,7 @@ def get_higher_level_single_processing(
             )
             density_matrix_on_combined_system = petz_map.get_combined_system()
             new_key = petz_map.get_new_key()
-            changes[(new_key.n, new_key.level)] = density_matrix_on_combined_system
+            changes[new_key] = density_matrix_on_combined_system
     return changes
 
 
@@ -142,13 +142,13 @@ def compute_lower_level(rho_dict: LatticeDict, ell: int) -> LatticeDict:
                     r_A = ptrace(r_AB, 1, end="right")
                     # trace out right- and leftmost site
                     # update rho_dict on level ell-1
-                    lower_level_dict[(key[0] - 0.5, ell - 1)] = r_A
-                    lower_level_dict[(key[0] + 0.5, ell - 1)] = r_B
+                    lower_level_dict[key.get_lower_level_left()] = r_A
+                    lower_level_dict[key.get_lower_level_right()] = r_B
                 else:
                     # trace out leftmost site
                     r_B = ptrace(r_AB, 1, end="left")
                     # update rho_dict on level ell-1
-                    lower_level_dict[(key[0] + 0.5, ell - 1)] = r_B
+                    lower_level_dict[key.get_lower_level_right()] = r_B
 
     return lower_level_dict
 
@@ -168,8 +168,8 @@ def compute_lower_level_sparse(rho_dict: LatticeDict, ell: int) -> LatticeDict:
                 r_A = ptrace(r_AB, 1, end="right")
                 # trace out right- and leftmost site
                 # update rho_dict on level ell-1
-                lower_level_dict[(key[0] - 0.5, ell - 1)] = r_A
-                lower_level_dict[(key[0] + 0.5, ell - 1)] = r_B
+                lower_level_dict[key.get_lower_level_left()] = r_A
+                lower_level_dict[key.get_lower_level_right()] = r_B
 
     return lower_level_dict
 
@@ -186,16 +186,16 @@ def assemble_mutual_information_from_dict(
             # compose mutual information
             mut_info[key] = (
                 info
-                - inf_dict[(key[0] - 0.5, ell - 1)]
-                - inf_dict[(key[0] + 0.5, ell - 1)]
-                + inf_dict[(key[0], ell - 2)]
+                - inf_dict[key.get_lower_level_left()]
+                - inf_dict[key.get_lower_level_right()]
+                + inf_dict[LatticeKey(key.coord, key.level - 2)]
             )
     elif ell == 1:
         for key, info in inf_dict.items_at_level(ell):
             mut_info[key] = (
                 info
-                - inf_dict[(key[0] - 0.5, ell - 1)]
-                - inf_dict[(key[0] + 0.5, ell - 1)]
+                - inf_dict[key.get_lower_level_left()]
+                - inf_dict[key.get_lower_level_right()]
             )
     else:
         for key, info in inf_dict.items_at_level(ell):
@@ -235,7 +235,7 @@ def anti_commutator(A: np.ndarray, B: np.ndarray) -> np.ndarray:
 
 def compute_commutator(
     rho_dict: LatticeDict,
-    key: tuple,
+    key: LatticeKey,
     range_: int,
     subsystem_hamiltonian: LatticeDict,
     orientation: str,
@@ -261,9 +261,9 @@ def compute_commutator(
         distance = range_ - reduce_range
 
         if orientation == "left":
-            key_ = (key[0] - 0.5 * distance, key[1] + distance)
+            key_ = LatticeKey(key.coord - 0.5 * distance, key.level + distance)
         else:
-            key_ = (key[0] + 0.5 * distance, key[1] + distance)
+            key_ = LatticeKey(key.coord + 0.5 * distance, key.level + distance)
 
         try:
             DM = rho_dict[key_]
@@ -289,37 +289,38 @@ def information_gradient(
     n_max: float,
     range_: int,
     subsystem_hamiltonian: LatticeDict,
-) -> LatticeDict[tuple[float, int], np.ndarray]:
+) -> LatticeDict[np.ndarray]:
     """!
     Computes the information gradient values on level ell. Separates the three possible cases:
     ell=0, ell=1 and ell>1 (which all have different formulas).
     """
     inf_current = LatticeDict()
     for n in list(np.arange(n_min, n_max + 1)):
-        r_AB = rho_dict[(n, ell)]
+        key = LatticeKey(coord=n, level=ell)
+        r_AB = rho_dict[key]
         info_gradient = np_logm(r_AB)
 
         if ell >= 1:
-            r_B = rho_dict[(n + 0.5, ell - 1)]
-            r_A = rho_dict[(n - 0.5, ell - 1)]
+            r_B = rho_dict[key.get_lower_level_right()]
+            r_A = rho_dict[key.get_lower_level_left()]
             info_gradient -= np.kron(np.eye(2), np_logm(r_B)) + np.kron(
                 np_logm(r_A), np.eye(2)
             )
 
         if ell >= 2:
-            r_AnB = rho_dict[(n, ell - 2)]
+            r_AnB = rho_dict[LatticeKey(n, ell - 2)]
             info_gradient -= np.kron(np.kron(np.eye(2), np.eye(len(r_AnB))), np.eye(2))
 
         commutator_left = compute_commutator(
-            rho_dict, (n, ell), range_, subsystem_hamiltonian, orientation="left"
+            rho_dict, key, range_, subsystem_hamiltonian, orientation="left"
         )
         commutator_right = compute_commutator(
-            rho_dict, (n, ell), range_, subsystem_hamiltonian, orientation="right"
+            rho_dict, key, range_, subsystem_hamiltonian, orientation="right"
         )
 
         current_left = np.trace(info_gradient @ commutator_left)
         current_right = np.trace(info_gradient @ commutator_right)
-        inf_current[(n, ell)] = np.array([current_left, current_right])
+        inf_current[key] = np.array([current_left, current_right])
 
     return inf_current
 
@@ -338,9 +339,7 @@ def one_shift(rho_dict: LatticeDict, alpha: float = 1.0) -> LatticeDict:
 def push_keys(rho_dict: LatticeDict, number: float) -> LatticeDict:
     return_dict = LatticeDict()
     for key in list(rho_dict):
-        n = key[0]
-        new_n = n + number
-        new_key = (new_n, key[1])
+        new_key = LatticeKey(key.coord + number, key.level)
         return_dict[new_key] = rho_dict[key]
 
     return return_dict
@@ -348,16 +347,6 @@ def push_keys(rho_dict: LatticeDict, number: float) -> LatticeDict:
 
 def arctanh(x: float) -> float:
     return 0.5 * np.log(x + 1.0) - 0.5 * np.log(1 - x)
-
-
-def update_and_scatter(
-    rho_dict: LatticeDict, n_min: float, n_max: float, ell: int
-) -> LatticeDict:
-    higher_level = get_higher_level(rho_dict, n_min, n_max, ell)
-    if RANK == 0:
-        rho_dict += higher_level
-    rho_dict = COMM.bcast(rho_dict, root=0)
-    return rho_dict
 
 
 def align_to_level(density_matrix: LatticeDict, level: int) -> LatticeDict:

@@ -4,6 +4,7 @@ import shutil
 import numpy as np
 import pytest
 
+from local_information.lattice.lattice_dict import LatticeKey
 from local_information.operators.hamiltonian import Hamiltonian
 from local_information.operators.operator import add_spins
 
@@ -56,7 +57,6 @@ class TestHamiltonian:
         for key, val_dict in energy_current.items():
             for _, val in val_dict.items():
                 assert np.allclose(np.linalg.norm(val), 0.0)
-        pass
 
     def test_energy_current_advanced(self, test_z_x_hamiltonian):
         energy_current = test_z_x_hamiltonian.energy_current
@@ -65,14 +65,14 @@ class TestHamiltonian:
         n_min = 10
         n_max = 0
         for key in energy_current.keys():
-            if key[0] <= n_min:
-                n_min = key[0]
-            if key[0] >= n_max:
-                n_max = key[0]
+            if key.coord <= n_min:
+                n_min = key.coord
+            if key.coord >= n_max:
+                n_max = key.coord
 
         for key, val_dict in energy_current.items():
             assert len(val_dict.keys()) <= 2
-            if key[0] == n_min or key[0] == n_max:
+            if key.coord == n_min or key.coord == n_max:
                 assert len(val_dict.keys()) == 1
             else:
                 assert len(val_dict.keys()) == 2
@@ -81,7 +81,7 @@ class TestHamiltonian:
         # all local Hamiltonians are the same here, so we only need to compute
         # a single commutator. First get the corresponding operator
         # for any of the keys
-        operator = test_z_x_hamiltonian.operator[(n_min, 1)]
+        operator = test_z_x_hamiltonian.operator[LatticeKey(n_min, 1)]
         # construct two Hamitlonians by adding a single spin right and left
         operator_left = add_spins(operator, 1, orientation="left")
         operator_right = add_spins(operator, 1, orientation="right")
@@ -99,11 +99,10 @@ class TestHamiltonian:
                 assert np.allclose(val, commutator_right) or np.allclose(
                     val, commutator_left
                 )
-                if key[0] == n_min:
+                if key.coord == n_min:
                     assert np.allclose(val, commutator_right)
-                elif key[0] == n_max:
+                elif key.coord == n_max:
                     assert np.allclose(val, commutator_left)
-        pass
 
     def test_energy_current(self, test_mixed_field_ising_hamiltonian):
         energy_current = test_mixed_field_ising_hamiltonian.energy_current
@@ -112,20 +111,20 @@ class TestHamiltonian:
         n_min = 10
         n_max = 0
         for key in energy_current.keys():
-            if key[0] <= n_min:
-                n_min = key[0]
-            if key[0] >= n_max:
-                n_max = key[0]
+            if key.coord <= n_min:
+                n_min = key.coord
+            if key.coord >= n_max:
+                n_max = key.coord
 
         for key, val_dict in energy_current.items():
             assert len(val_dict.keys()) <= 2
-            if key[0] == n_min or key[0] == n_max:
+            if key.coord == n_min or key.coord == n_max:
                 assert len(val_dict.keys()) == 1
             else:
                 assert len(val_dict.keys()) == 2
 
         # same as above
-        operator = test_mixed_field_ising_hamiltonian.operator[(n_min, 1)]
+        operator = test_mixed_field_ising_hamiltonian.operator[LatticeKey(n_min, 1)]
         # construct two Hamiltonians by adding a single spin right and left
         operator_left = add_spins(operator, 1, orientation="left")
         operator_right = add_spins(operator, 1, orientation="right")
@@ -143,11 +142,10 @@ class TestHamiltonian:
                 assert np.allclose(val, commutator_right) or np.allclose(
                     val, commutator_left
                 )
-                if key[0] == n_min:
+                if key.coord == n_min:
                     assert np.allclose(val, commutator_right)
-                elif key[0] == n_max:
+                elif key.coord == n_max:
                     assert np.allclose(val, commutator_left)
-        pass
 
     def test_save_checkpoint_from_checkpoint(
         self,
@@ -172,4 +170,3 @@ class TestHamiltonian:
             assert loaded_hamiltonian == test_hamiltonian
             assert loaded_hamiltonian.max_l == test_hamiltonian.max_l
             shutil.rmtree("test_folder")
-        pass

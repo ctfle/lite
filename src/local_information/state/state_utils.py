@@ -4,14 +4,14 @@ import logging
 from copy import deepcopy
 import numpy as np
 from local_information.core.utils import get_higher_level_single_processing
-from local_information.lattice.lattice_dict import LatticeDict
+from local_information.lattice.lattice_dict import LatticeDict, LatticeKey
 from local_information.core.utils import compute_mutual_information_at_level
 from local_information.mpi.mpi_setup import COMM
 from typing import Sequence
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from local_information.typedefs import LatticeDictKeyTuple
+    pass
 
 logger = logging.getLogger()
 
@@ -67,7 +67,6 @@ def check_density_matrix_sequence(density_matrix_sequence: Sequence[np.ndarray])
             raise ValueError(
                 "input incorrect: initial density matrix is not semi-positive definite"
             )
-    pass
 
 
 def check_level_overhead(
@@ -97,12 +96,11 @@ def get_largest_dim(matrix_sequence: Sequence[np.ndarray]) -> int:
 
 
 def add_higher_level_site(
-    input_lattice: LatticeDict, key: LatticeDictKeyTuple, next_key: LatticeDictKeyTuple
+    input_lattice: LatticeDict, key: LatticeKey, next_key: LatticeKey
 ):
-    assert key[1] == next_key[1], "keys must be associated with same level"
-    level = key[1]
+    assert key.level == next_key.level, "keys must be associated with same level"
     temp_dict = LatticeDict()
     temp_dict[key] = input_lattice[key]
     temp_dict[next_key] = input_lattice[next_key]
 
-    return get_higher_level_single_processing(temp_dict, level)
+    return get_higher_level_single_processing(temp_dict, key.level)

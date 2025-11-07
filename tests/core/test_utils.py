@@ -3,7 +3,7 @@ from mock import MagicMock
 
 import numpy as np
 from local_information.core.utils import *
-from local_information.lattice.lattice_dict import LatticeDict
+from local_information.lattice.lattice_dict import LatticeDict, keys_from_iterable
 
 np.random.seed(seed=42)
 
@@ -19,7 +19,7 @@ class TestUtil:
         mock.__getitem__.return_value = density_matrix
         mock.boundaries.return_value = (n_min, n_max)
         n_values = np.arange(n_min, n_max + 1)
-        keys = [(j, level) for j in n_values]
+        keys = keys_from_iterable([(j, level) for j in n_values])
         vals = [density_matrix for _ in range(len(n_values))]
 
         mock.keys.return_value = [(j, level) for j in np.arange(n_min, n_max + 1)]
@@ -36,12 +36,10 @@ class TestUtil:
         ],
     )
     def test_get_higher_level_1(self, matrix, level):
-        keys = [(n, level) for n in range(10)]
+        keys = keys_from_iterable([(n, level) for n in range(10)])
         vals = [matrix for _ in range(10)]
         test_dict = LatticeDict.from_list(keys, vals)
         higher_level_sqrt = get_higher_level(test_dict, level=level, sqrt_method=True)
-        higher_level_exp = get_higher_level(test_dict, level=level, sqrt_method=False)
-        # assert higher_level_exp == higher_level_sqrt
         for key, val in higher_level_sqrt.items_at_level(level + 1):
             assert np.allclose(val, np.eye(2 ** (level + 2)) / (2 ** (level + 2)))
 
@@ -55,7 +53,7 @@ class TestUtil:
         ],
     )
     def test_get_higher_level_n_min_equals_n_max(self, matrix, level):
-        keys = [(0, level)]
+        keys = keys_from_iterable([(0, level)])
         vals = [matrix]
         test_dict = LatticeDict.from_list(keys, vals)
         higher_level_sqrt = get_higher_level(test_dict, level=level, sqrt_method=True)
@@ -74,7 +72,7 @@ class TestUtil:
     def test_get_higher_level_random_matrix(self, level, system_size):
         # Note: using random matrices, this tests does only makes sense at level 0
         # for higher levels the matrices share subsystems and random matrices don't suffice anymore
-        keys = [(n, level) for n in range(system_size)]
+        keys = keys_from_iterable([(n, level) for n in range(system_size)])
         vals = []
         for _ in range(system_size):
             matrix = np.diag(np.random.uniform(size=2 ** (level + 1)))
@@ -89,13 +87,13 @@ class TestUtil:
         # assert that all partial traces yield the correct matrices
         for n in range(system_size - 1):
             trace_right_exp = ptrace(
-                higher_level_exp[(0.5 + n, level + 1)], 1, end="right"
+                higher_level_exp[LatticeKey(0.5 + n, level + 1)], 1, end="right"
             )
             trace_right_sqrt = ptrace(
-                higher_level_sqrt[(0.5 + n, level + 1)], 1, end="right"
+                higher_level_sqrt[LatticeKey(0.5 + n, level + 1)], 1, end="right"
             )
             assert np.allclose(trace_right_exp, trace_right_sqrt)
-            assert np.allclose(test_dict[(n, level)], trace_right_exp)
+            assert np.allclose(test_dict[LatticeKey(n, level)], trace_right_exp)
 
     @pytest.mark.parametrize(
         "matrix, level, result",
@@ -128,7 +126,7 @@ class TestUtil:
         ],
     )
     def test_get_higher_level_2(self, matrix, level, result):
-        keys = [(n, level) for n in range(10)]
+        keys = keys_from_iterable([(n, level) for n in range(10)])
         vals = [matrix for _ in range(10)]
         test_dict = LatticeDict.from_list(keys, vals)
         higher_level_sqrt = get_higher_level(test_dict, level=level, sqrt_method=True)
@@ -233,7 +231,7 @@ class TestUtil:
     def test_get_higher_level_heterogeneous_system(
         self, matrix_1, matrix_2, level, result_1, result_2, result_3
     ):
-        keys = [(n, level) for n in range(9)]
+        keys = keys_from_iterable([(n, level) for n in range(9)])
         vals = [matrix_1 for _ in range(9)]
         vals[4] = matrix_2
         test_dict = LatticeDict.from_list(keys, vals)
@@ -243,9 +241,9 @@ class TestUtil:
 
         assert higher_level_exp == higher_level_sqrt
         for key, val in higher_level_sqrt.items_at_level(level + 1):
-            if key == (3.5, 1):
+            if key == LatticeKey(3.5, 1):
                 assert np.allclose(val, result_1)
-            elif key == (4.5, 1):
+            elif key == LatticeKey(4.5, 1):
                 assert np.allclose(val, result_2)
             else:
                 assert np.allclose(val, result_3)
@@ -462,7 +460,7 @@ class TestUtil:
         self, density_matrix, lower_level, level, n_min, n_max
     ):
         n_values = np.arange(n_min, n_max + 1)
-        keys = [(j, level) for j in n_values]
+        keys = keys_from_iterable([(j, level) for j in n_values])
         vals = [density_matrix for _ in range(len(n_values))]
         mock_rho_dict = LatticeDict.from_list(keys, vals)
 
@@ -510,7 +508,7 @@ class TestUtil:
         self, density_matrix, information, level, n_min, n_max
     ):
         n_values = np.arange(n_min, n_max + 1)
-        keys = [(j, level) for j in n_values]
+        keys = keys_from_iterable([(j, level) for j in n_values])
         vals = [density_matrix for _ in range(len(n_values))]
         mock_rho_dict = LatticeDict.from_list(keys, vals)
 
@@ -568,7 +566,7 @@ class TestUtil:
     )
     def test_push_keys(self, density_matrix, level, n_min, n_max, push):
         n_values = np.arange(n_min, n_max + 1)
-        keys = [(j, level) for j in n_values]
+        keys = keys_from_iterable([(int(j), level) for j in n_values])
         vals = [density_matrix for _ in range(len(n_values))]
         mock_rho_dict = LatticeDict.from_list(keys, vals)
         n_min_init, n_max_init = mock_rho_dict.boundaries(level)
@@ -578,8 +576,7 @@ class TestUtil:
         assert n_max_pushed - push == n_max_init
 
         for key in keys:
-            n = key[0]
-            assert (n + push, level) in pushed_dict.keys()
+            assert LatticeKey(key.coord + push, level) in pushed_dict.keys()
 
     def test_one_shift(self):
         return

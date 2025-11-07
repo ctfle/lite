@@ -15,7 +15,7 @@ from local_information.core.runge_kutta_solvers.runge_kutta_parameters import (
 )
 from local_information.core.utils import commutator
 from local_information.core.utils import get_higher_level
-from local_information.lattice.lattice_dict import LatticeDict
+from local_information.lattice.lattice_dict import LatticeDict, LatticeKey
 from local_information.state.state import State
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
@@ -84,7 +84,7 @@ class RungeKuttaSolver(ABC):
 
     @abstractmethod
     def dissipator(
-        self, key: tuple[float, int], density_matrix: np.ndarray
+        self, key: LatticeKey, density_matrix: np.ndarray
     ) -> np.ndarray | None:
         pass
 
@@ -202,7 +202,9 @@ class RungeKuttaSolver(ABC):
                 # m is the number of sites left to k
                 if m >= self.range_:
                     # the site is at least _range away form the boundary
-                    key_l = (k[0] - 0.5 * self.range_, dyn_max_l + self.range_)
+                    key_l = LatticeKey(
+                        k.coord - 0.5 * self.range_, dyn_max_l + self.range_
+                    )
                     DM_l = work_dict[key_l]
                     H_max_l_range = self._system_operator.subsystem_hamiltonian[key_l]
                     # build commutator and trace out _range sites on the left
@@ -214,7 +216,7 @@ class RungeKuttaSolver(ABC):
 
                 else:
                     # the site is less than _range away form the left boundary
-                    key_l = (k[0] - 0.5 * m, dyn_max_l + m)
+                    key_l = LatticeKey(k.coord - 0.5 * m, dyn_max_l + m)
                     DM_l = work_dict[key_l]
                     H_max_l_m_ = self._system_operator.subsystem_hamiltonian[key_l]
                     # build commutator and trace out _m_ sites on the left
@@ -226,7 +228,9 @@ class RungeKuttaSolver(ABC):
                 bar_m = (key_max_l_dim - 1) - m
                 if bar_m >= self.range_:
                     # the site is at least _range away form the boundary
-                    key_r = (k[0] + 0.5 * self.range_, dyn_max_l + self.range_)
+                    key_r = LatticeKey(
+                        k.coord + 0.5 * self.range_, dyn_max_l + self.range_
+                    )
                     DM_r = work_dict[key_r]
                     H_max_l_range = self._system_operator.subsystem_hamiltonian[key_r]
                     # build commutator and trace out _range sites on the left
@@ -238,7 +242,7 @@ class RungeKuttaSolver(ABC):
 
                 else:
                     # the site is at less than _range away form the right boundary
-                    key_r = (k[0] + 0.5 * bar_m, dyn_max_l + bar_m)
+                    key_r = LatticeKey(k.coord + 0.5 * bar_m, dyn_max_l + bar_m)
                     DM_r = work_dict[key_r]
                     H_max_l_m_ = self._system_operator.subsystem_hamiltonian[key_r]
                     # build commutator and trace out _range sites on the left
@@ -260,8 +264,6 @@ class RungeKuttaSolver(ABC):
                 work_dict[k] = -1j * rhs
 
             # drop everything not at level max_l
-            for key in list(work_dict):
-                if key[1] != dyn_max_l:
-                    work_dict.pop(key, None)
+            work_dict.kill_all_except(dyn_max_l)
 
         return work_dict

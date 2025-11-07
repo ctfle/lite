@@ -3,11 +3,11 @@ from __future__ import annotations
 from typing import Sequence
 
 import numpy as np
-from local_information.lattice.lattice_dict import LatticeDict
+from local_information.lattice.lattice_dict import LatticeDict, LatticeKey
 from local_information.state.build.build_finite_state import (
     get_density_matrices_at_level,
 )
-from local_information.state.state_helper_funcs import get_base_2_dim
+from local_information.state.state_utils import get_base_2_dim
 
 
 def get_boundaries(
@@ -64,13 +64,13 @@ def compute_repeated_elements(
     store_sites_keys = []
     if orientation == "right":
         for j in range(size):
-            store_sites_keys += [(max_l / 2 + j, max_l)]
+            store_sites_keys += [LatticeKey(max_l / 2 + j, max_l)]
 
     elif orientation == "left":
         n_max = max_l + size
         n_0 = n_max - 1 - max_l / 2
         for j in range(size):
-            store_sites_keys += [(n_0 - j, max_l)]
+            store_sites_keys += [LatticeKey(n_0 - j, max_l)]
 
     # drop the rest
     density_matrices_at_max_l.kill_all_except(max_l)

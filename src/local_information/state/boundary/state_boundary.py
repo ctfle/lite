@@ -1,13 +1,9 @@
 from __future__ import annotations
-from local_information.lattice.lattice_dict import LatticeDict
+from local_information.lattice.lattice_dict import LatticeDict, LatticeKey
 from functools import cached_property
 import numpy as np
 
 from local_information.core.petz_map import ptrace
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from local_information.typedefs import LatticeDictKeyTuple
 
 
 class StateBoundary:
@@ -31,8 +27,12 @@ class StateBoundary:
     @classmethod
     def from_lattice_dict(cls, density_matrix: LatticeDict):
         level = density_matrix.get_max_level()
-        left_boundary_key = (density_matrix.smallest_at_level(level), level)
-        right_boundary_key = (density_matrix.largest_at_level(level), level)
+        left_boundary_key = LatticeKey(
+            coord=density_matrix.smallest_at_level(level), level=level
+        )
+        right_boundary_key = LatticeKey(
+            coord=density_matrix.largest_at_level(level), level=level
+        )
 
         boundary_left = LatticeDict.from_dict(
             {left_boundary_key: density_matrix[left_boundary_key]}
@@ -46,16 +46,16 @@ class StateBoundary:
         )
 
     @property
-    def boundary_key_left(self) -> LatticeDictKeyTuple:
+    def boundary_key_left(self) -> LatticeKey:
         """Get the boundary key on the left end of the state."""
         n_min = self._boundary_left.smallest_at_level(self.level)
-        return n_min, self.level
+        return LatticeKey(n_min, self.level)
 
     @property
-    def boundary_key_right(self) -> LatticeDictKeyTuple:
+    def boundary_key_right(self) -> LatticeKey:
         """Get the boundary key on the left end of the state."""
         n_max = self._boundary_right.largest_at_level(self.level)
-        return n_max, self.level
+        return LatticeKey(n_max, self.level)
 
     @property
     def level(self):
@@ -82,7 +82,9 @@ class StateBoundary:
             end="left",
         )
 
-    def update_boundary_keys_right(self, key, boundary: np.ndarray | None = None):
+    def update_boundary_keys_right(
+        self, key: LatticeKey, boundary: np.ndarray | None = None
+    ):
         boundary_right = self._boundary_right[self.boundary_key_right]
         old_boundary_key = self.boundary_key_right
         if boundary:
@@ -91,7 +93,9 @@ class StateBoundary:
             self._boundary_right[key] = boundary_right
         self._boundary_right.pop(old_boundary_key)
 
-    def update_boundary_keys_left(self, key, boundary: np.ndarray | None = None):
+    def update_boundary_keys_left(
+        self, key: LatticeKey, boundary: np.ndarray | None = None
+    ):
         boundary_left = self._boundary_left[self.boundary_key_left]
         old_boundary_key = self.boundary_key_left
         if boundary:

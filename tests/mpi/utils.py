@@ -6,7 +6,6 @@ from local_information.core.minimization.minimization import *
 from local_information.operators.hamiltonian import Hamiltonian
 from local_information.lattice.lattice_dict import LatticeDict
 from local_information.state.state import State
-from local_information.mpi.mpi_setup import COMM, RANK, SIZE, NAME, PARALLEL
 from local_information.mpi.mpi import Distributor
 
 
@@ -67,7 +66,7 @@ def test_thermal(request):
     site_0 = np.eye(2) / 2
     site_1 = (
         np.eye(2**3, dtype=np.complex128)
-        - 0.1 * hamiltonian.subsystem_hamiltonian[(L // 2, 2)].toarray()
+        - 0.1 * hamiltonian.subsystem_hamiltonian[LatticeKey(L // 2, 2)].toarray()
     ) / 8
     system = [[site_1], [site_0]]
     state = State.build(system, 1)
@@ -111,7 +110,7 @@ def random_lattice_dict(request):
             random_unitary.conj().T @ random_density_matrix @ random_unitary
         )
         density_matrices.append(random_density_matrix)
-        keys.append((n + 0.5 * level, level))
+        keys.append(LatticeKey(n + 0.5 * level, level))
 
     return LatticeDict.from_list(keys, density_matrices)
 

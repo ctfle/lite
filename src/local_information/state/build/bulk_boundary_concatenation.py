@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from local_information.core.utils import compute_lower_level_sparse, align_to_level
-from local_information.lattice.lattice_dict import LatticeDict
+from local_information.lattice.lattice_dict import LatticeDict, LatticeKey
 from local_information.state.build.build_finite_state import increment_level_from_to
 from typing import Sequence
 
@@ -32,16 +32,18 @@ def concatenate_bulk_and_boundaries(
 
     shift_to_structure = number_of_sites_required_for_repeated_left
     for key, structure_density_matrix in bulk_density_matrices.items():
-        (n, ell) = key
-        combined[(n + shift_to_structure, ell)] = structure_density_matrix
+        combined[LatticeKey(key.coord + shift_to_structure, key.level)] = (
+            structure_density_matrix
+        )
 
     shift_to_repeated_right = (
         number_of_sites_required_for_repeated_left
         + number_of_sites_required_for_structure
     )
     for key, repeated_right_density_matrix in repeated_right.items():
-        (n, ell) = key
-        combined[(n + shift_to_repeated_right, ell)] = repeated_right_density_matrix
+        combined[LatticeKey(key.coord + shift_to_repeated_right, key.level)] = (
+            repeated_right_density_matrix
+        )
 
     return combined
 
