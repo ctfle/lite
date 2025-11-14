@@ -1,11 +1,13 @@
 import os
 import shutil
+from copy import deepcopy
 
 import numpy as np
 import pytest
 
 from local_information.lattice.lattice_dict import LatticeDict, keys_from_iterable
 from local_information.state.state import State
+from local_information.core.utils import get_higher_level_single_processing
 
 
 class TestState:
@@ -390,3 +392,83 @@ class TestState:
             n_min_init + 0.5,
             n_max_init - 0.5,
         )
+
+    @pytest.mark.parametrize(
+        "density_matrix, number_of_sites, max_level",
+        [
+            (
+                np.array([[0.5, 0.0], [0.0, 0.5]]),
+                10,
+                5
+            ),
+            (
+                np.array([[0.9, 0.0], [0.0, 0.1]]),
+                10,
+                5
+            ),
+            (
+                    # using X eigenstates with p=0.1 expanded in Z
+                    0.5 * np.array([[1, 2*0.1 - 1], [2*0.1 - 1, 1]]),
+                    10,
+                    5
+            ),
+        ],
+    )
+    def test_get_all_levels(self, density_matrix, number_of_sites, max_level):
+        keys = keys_from_iterable([(j, 0) for j in range(number_of_sites)])
+        vals = [density_matrix for _ in range(number_of_sites)]
+        density_matrix = LatticeDict.from_list(keys, vals)
+
+        for level in range(max_level):
+            density_matrix += get_higher_level_single_processing(density_matrix, level)
+
+        max_level_density_matrix = deepcopy(density_matrix)
+        max_level_density_matrix.kill_all_except(max_level)
+
+        state = State(density_matrix=max_level_density_matrix, case="finite")
+        all_levels = state.get_all_levels()
+
+        for level in range(max_level):
+            for key, dens_mat in all_levels.items_at_level(level):
+                assert np.allclose(dens_mat, density_matrix[key])
+
+    @pytest.mark.parametrize(
+        "density_matrix, number_of_sites, max_level",
+        [
+            (
+                np.array([[0.5, 0.0], [0.0, 0.5]]),
+                10,
+                5
+            ),
+            (
+                np.array([[0.9, 0.0], [0.0, 0.1]]),
+                10,
+                5
+            ),
+            (
+                    # using X eigenstates with p=0.1 expanded in Z
+                    0.5 * np.array([[1, 2*0.1 - 1], [2*0.1 - 1, 1]]),
+                    10,
+                    5
+            ),
+        ],
+    )
+    def test_get_information_lattice(self, density_matrix, number_of_sites, max_level):
+        keys = keys_from_iterable([(j, 0) for j in range(number_of_sites)])
+        vals = [density_matrix for _ in range(number_of_sites)]
+        density_matrix = LatticeDict.from_list(keys, vals)
+
+        for level in range(max_level):
+            density_matrix += get_higher_level_single_processing(density_matrix, level)
+
+        max_level_density_matrix = deepcopy(density_matrix)
+        max_level_density_matrix.kill_all_except(max_level)
+
+        state = State(density_matrix=max_level_density_matrix, case="finite")
+
+        all_levels = state.get_all_levels()
+        information_lattice = state.get_information_lattice(all_levels)
+        for level in range(max_level):
+            for key, mut_info in information_lattice.items_at_level(level):
+                if level != 0:
+                    assert np.allclose(mut_info, 0.0)

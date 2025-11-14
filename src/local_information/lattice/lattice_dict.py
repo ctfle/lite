@@ -203,25 +203,25 @@ class LatticeDict(dict):
     def dim_at_level(self, ell: int) -> int:
         return len(self.coords_at_level(ell))
 
-    def boundaries(self, ell: int) -> tuple[float, float]:
-        """!
-        get the boundary keys at level ell
+    def boundaries(self, level: int) -> tuple[float, float]:
         """
-        n_max = self.largest_at_level(ell)
-        n_min = self.smallest_at_level(ell)
+        Get the boundary keys at level level
+        """
+        n_max = self.largest_at_level(level)
+        n_min = self.smallest_at_level(level)
         return n_min, n_max
 
-    def coords_at_level(self, ell: int) -> list[float]:
-        return [key.coord for key in self.keys() if key.level == ell]
+    def coords_at_level(self, level: int) -> list[float]:
+        return [key.coord for key in self.keys() if key.level == level]
 
-    def keys_at_level(self, ell: int) -> LatticeDictIterator:
-        return LatticeDictIterator(self, ell, values=False)
+    def keys_at_level(self, level: int) -> LatticeDictIterator:
+        return LatticeDictIterator(self, level, values=False)
 
-    def values_at_level(self, ell: int) -> LatticeDictIterator:
-        return LatticeDictIterator(self, ell, keys=False)
+    def values_at_level(self, level: int) -> LatticeDictIterator:
+        return LatticeDictIterator(self, level, keys=False)
 
-    def items_at_level(self, ell) -> LatticeDictIterator:
-        return LatticeDictIterator(self, ell)
+    def items_at_level(self, level: int) -> LatticeDictIterator:
+        return LatticeDictIterator(self, level)
 
     def get_max_level(self) -> int:
         return max(map(lambda x: x.level, self.keys()))
@@ -236,6 +236,12 @@ class LatticeDict(dict):
         for key in list(self.keys()):
             if key.level != ell:
                 self.pop(key, None)
+
+    def drop_boundaries(self, level: int):
+        """ Drops the boundary density matrices at given level. """
+        n_min, n_max = self.boundaries(level)
+        self.pop(LatticeKey(n_max, level), None)
+        self.pop(LatticeKey(n_min, level), None)
 
     def dagger(self) -> LatticeDict:
         daggered = self.deepcopy()
@@ -353,20 +359,23 @@ class LatticeKey:
 
     __repr__ = __str__
 
-    def get_lower_level_left(self) -> LatticeKey:
+    def get_lower_level_left(self, level_difference: int = 1) -> LatticeKey:
         assert self.level != 0, "level is 0, no lower level existing"
-        return LatticeKey(self.coord - 0.5, self.level - 1)
+        return LatticeKey(self.coord - 0.5 * level_difference, self.level - level_difference)
 
-    def get_lower_level_right(self) -> LatticeKey:
+    def get_lower_level_right(self, level_difference: int = 1) -> LatticeKey:
         assert self.level != 0, "level is 0, no lower level existing"
-        return LatticeKey(self.coord + 0.5, self.level - 1)
+        return LatticeKey(self.coord + 0.5 * level_difference, self.level - level_difference)
 
-    def get_higher_level_right(self) -> LatticeKey:
-        return LatticeKey(self.coord + 0.5, self.level + 1)
+    def get_higher_level_right(self, level_difference: int = 1) -> LatticeKey:
+        return LatticeKey(self.coord + 0.5 * level_difference, self.level + level_difference)
 
-    def get_higher_level_left(self) -> LatticeKey:
-        return LatticeKey(self.coord - 0.5, self.level + 1)
+    def get_higher_level_left(self, level_difference: int = 1) -> LatticeKey:
+        return LatticeKey(self.coord - 0.5 * level_difference, self.level + level_difference)
+
+    def shift_coord(self, n: int) -> LatticeKey:
+        return LatticeKey(coord=self.coord + n, level=self.level, name=self.name)
 
 
-def keys_from_iterable(keys: Iterable[tuple[float, int]]):
+def keys_from_iterable(keys: Iterable[tuple[float, int]]) -> list[LatticeKey]:
     return list(map(lambda x: LatticeKey.from_tuple(x), keys))

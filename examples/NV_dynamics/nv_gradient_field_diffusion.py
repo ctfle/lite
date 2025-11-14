@@ -59,7 +59,7 @@ if disorder:
     ]
 else:
     J_list = [-J for j in range(L)]
-    J_zz = [2 * (J) for j in range(L)]
+    J_zz = [2 * (J) for _ in range(L)]
     x_list = [
         np.pi / 2 * d_phi(x, delta_phi, mean_dis + 0.0000001, L // 2, 1.0, r_truncation)
         for x in range(L)
@@ -98,12 +98,14 @@ x = [1.0 for j in range(L)]
 x_list = [["x", [1.0 for j in range(L)]]]
 x_mag = li.operators.Operator(x_list)
 
+
 def x_magnetization(rho):
     return x_mag.expectation_value(rho)
 
 
 # directory to store the data
-checkpoint_folder = f"./data/2_NV_diffusion={dissipation_strength}_J={J}_L={L}_rtrunc={r_truncation}_mean_dis={mean_dis}_delta_phi={delta_phi}_num_pol={num_polarized_sites}"
+checkpoint_folder = (f"./data/2_NV_diffusion={dissipation_strength}_J={J}_L={L}_rtrunc={r_truncation}"
+                     f"_mean_dis={mean_dis}_delta_phi={delta_phi}_num_pol={num_polarized_sites}")
 
 # DataConfig and DataContainer is needed to communicate which observables to measure and checkpoint
 data_config = li.DataConfig(

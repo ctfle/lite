@@ -185,24 +185,22 @@ class System(ABC):
                                     Default False
         """
 
-        (
-            information_dict,
-            rho_dict_all_levels,
-        ) = self.state.get_information_lattice()
+        density_matrices_on_all_levels = self.state.get_all_levels()
+        information_dict = self.state.get_information_lattice(density_matrices_on_all_levels)
         self.state.current_sum_info = sum(
             information_dict.values_at_level(self.dyn_max_l)
         )
 
         # self.state.total_information = np.sum(list(information_dict.values()))
         self.data.update_default_observables(
-            density_matrix=rho_dict_all_levels,
+            density_matrix= density_matrices_on_all_levels,
             information_dict=information_dict,
             state=self.state,
             operator=self._system_operator,
         )
-        self.data.update_custom_observables(rho_dict_all_levels)
+        self.data.update_custom_observables(density_matrices_on_all_levels)
 
-        del rho_dict_all_levels
+        del density_matrices_on_all_levels
         self.state.current_sum_info = COMM.bcast(self.state.current_sum_info, root=0)
         if return_values:
             return self.data.return_latest()

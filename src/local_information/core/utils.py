@@ -41,8 +41,8 @@ def get_higher_level_single_processing(
     sqrt_method: bool = True,
 ) -> LatticeDict:
     """
-    Computes the density matrices one level higher than `ell` using the Petz map
-    in between the boundaries [n_min, n_max] (n_max included).
+    Computes the density matrices one level higher than `level` using the Petz map
+    for all entries at `level`.
     """
     changes = LatticeDict()
     # Only proceed if there are at least two sites
@@ -120,6 +120,37 @@ def compute_mutual_information_at_level(
     mut_inf_dict = COMM.bcast(mut_inf_dict, root=0)
 
     return work_dict, mut_inf_dict
+
+
+def compute_mutual_information(
+    denisty_matrices_on_all_levels: LatticeDict,
+    level: int,
+) -> tuple[LatticeDict, LatticeDict]:
+    """
+    Compute the mutual information for each site of the information lattice.
+    """
+    # compute 2 lower levels and stores them in a separate LatticeDict
+    inf_dict = compute_von_Neumann_information(denisty_matrices_on_all_levels, level)
+
+    # scatter `level` from root
+    work_level = None
+    if RANK == 0:
+        work_level = level
+    work_level = COMM.bcast(work_level, root=0)
+
+    for i in range(2):
+        if work_level - i - 1 >= 0:
+            inf_dict_lower = compute_von_Neumann_information(denisty_matrices_on_all_levels, level - i - 1)
+            if RANK == 0:
+                inf_dict += inf_dict_lower
+
+    if RANK == 0:
+        mut_inf_dict = assemble_mutual_information_from_dict(inf_dict, level)
+    else:
+        mut_inf_dict = None
+    mut_inf_dict = COMM.bcast(mut_inf_dict, root=0)
+
+    return mut_inf_dict
 
 
 def compute_lower_level(rho_dict: LatticeDict, ell: int) -> LatticeDict:
@@ -284,31 +315,31 @@ def compute_commutator(
 
 def information_gradient(
     rho_dict: LatticeDict,
-    ell: int,
+    level: int,
     n_min: float,
     n_max: float,
     range_: int,
     subsystem_hamiltonian: LatticeDict,
 ) -> LatticeDict[np.ndarray]:
-    """!
+    """
     Computes the information gradient values on level ell. Separates the three possible cases:
     ell=0, ell=1 and ell>1 (which all have different formulas).
     """
     inf_current = LatticeDict()
     for n in list(np.arange(n_min, n_max + 1)):
-        key = LatticeKey(coord=n, level=ell)
+        key = LatticeKey(coord=n, level=level)
         r_AB = rho_dict[key]
         info_gradient = np_logm(r_AB)
 
-        if ell >= 1:
+        if level >= 1:
             r_B = rho_dict[key.get_lower_level_right()]
             r_A = rho_dict[key.get_lower_level_left()]
             info_gradient -= np.kron(np.eye(2), np_logm(r_B)) + np.kron(
                 np_logm(r_A), np.eye(2)
             )
 
-        if ell >= 2:
-            r_AnB = rho_dict[LatticeKey(n, ell - 2)]
+        if level >= 2:
+            r_AnB = rho_dict[LatticeKey(n, level - 2)]
             info_gradient -= np.kron(np.kron(np.eye(2), np.eye(len(r_AnB))), np.eye(2))
 
         commutator_left = compute_commutator(

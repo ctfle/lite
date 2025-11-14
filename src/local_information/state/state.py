@@ -22,6 +22,7 @@ from local_information.state.build.build_repeated_elements import get_boundaries
 from local_information.state.build.bulk_boundary_concatenation import get_combined
 from local_information.core.utils import (
     compute_mutual_information_at_level,
+    compute_mutual_information,
     information_gradient,
 )
 
@@ -32,7 +33,7 @@ from local_information.core.utils import (
     compute_lower_level,
 )
 from local_information.mpi.mpi_setup import COMM, RANK
-from typing import TYPE_CHECKING, Any, Union, Sequence
+from typing import TYPE_CHECKING, Sequence
 
 if TYPE_CHECKING:
     from local_information.typedefs import SystemOperator
@@ -280,44 +281,45 @@ class State:
             self.total_information_at_dyn_max_l, other.total_information_at_dyn_max_l
         )
 
+    # TODO: add MPI here
+    def get_all_levels(self) -> LatticeDict:
+        all_levels = self.density_matrix.deepcopy()
+        for j in range(self.dyn_max_l, 0, -1):
+            all_levels += compute_lower_level(all_levels, j)
+
+        return all_levels
+
     def get_information_lattice(
-        self,
-    ) -> tuple[Union[LatticeDict, Any], Union[LatticeDict, Any]]:
-        """!
+            self, density_matrix_on_all_levels: LatticeDict
+    ) -> LatticeDict:
+        """
         Computes the information lattice (and optionally the density matrix dictionary) on all different scales
         from the current density matrix at 'dyn_max_ell' used for the time evolution down to 0.
-        Uses MPI: On all RANKs != 0 just passes
+        Uses MPI: On all RANKs != 0 just passes.
         """
 
         inf_dict = LatticeDict()
-        work_dict = self.density_matrix.deepcopy()
         ell = self.dyn_max_l
 
         # get n_min n_max from rho_dict
-        n_min, n_max = work_dict.boundaries(ell)
         stop = False
         while ell >= 0 and not stop:
-            # TODO: workdict gets copied in this function again!
             # compute_mutual_information_at_level returns None for lower_level_dict on all RANK !=0
-            # mutual_information is broad-casted
-            lower_level_dict, mutual_information = compute_mutual_information_at_level(
-                work_dict, ell
-            )
+            # mutual_information is broadcasted
+            mutual_information = compute_mutual_information(density_matrix_on_all_levels, ell)
             inf_dict += mutual_information
             if RANK == 0:
-                work_dict = work_dict + lower_level_dict
-                n_min -= 0.5
-                n_max += 0.5
                 ell -= 1
                 if ell < 0:
                     stop = True
             # broadcast 'stop' to exit loop for all mpi processes
             stop = COMM.bcast(stop, root=0)
 
-        return inf_dict, work_dict
+        return inf_dict
 
     def get_information_current(self, operator: SystemOperator) -> dict:
-        """! Computes the information current on all the sites up to dyn_max_l - range_
+        """
+        Computes the information current on all the sites up to dyn_max_l - range_
         (range_ is the range of the given Hamiltonian).
         Each site of the information current lattice has two elements since there are
         (at least) two currents
@@ -329,13 +331,13 @@ class State:
 
         # compute the information current just where it makes sense.
         # get the density matrices on all levels
-        _, rho_dict = self.get_information_lattice()
+        all_levels = self.get_all_levels()
         # fast exit for all RANKs !=0
         if RANK != 0:
             return current_dict
 
         for ell in range(self.dyn_max_l - operator.range_ + 1):
-            n_min, n_max = rho_dict.boundaries(ell)
+            n_min, n_max = all_levels.boundaries(ell)
             if (
                 self._case != "finite"
                 and n_min + operator.range_ > n_max - operator.range_
@@ -344,7 +346,7 @@ class State:
                 continue
             else:
                 current_dict += information_gradient(
-                    rho_dict,
+                    all_levels,
                     ell,
                     n_min + operator.range_,
                     n_max - operator.range_,
@@ -355,15 +357,13 @@ class State:
         return current_dict
 
     def reduce_to_level(self, level: int, pop_boundary: bool = False):
-        """reduces the level to ell"""
+        """ Reduces the level to `level` """
         if self.dyn_max_l >= level:
             for ell in range(self.dyn_max_l, level, -1):
                 self.density_matrix = compute_lower_level(self.density_matrix, ell)
 
                 if pop_boundary:
-                    n_min, n_max = self.density_matrix.boundaries(ell - 1)
-                    self.density_matrix.pop(LatticeKey(n_max, ell - 1), None)
-                    self.density_matrix.pop(LatticeKey(n_min, ell - 1), None)
+                    self.density_matrix.drop_boundaries(ell - 1)
             self.dyn_max_l = level
 
     def enlarge_left(self, nr_of_sites: int):
@@ -381,64 +381,66 @@ class State:
                             trace out the leftmost 'ell-1' spins Petz map, Petz map, update dict
                             ...
         """
-        n_max = self.density_matrix.largest_at_level(self.dyn_max_l)
+        rightmost_key = self.density_matrix.rightmost_key_at_level(self.dyn_max_l)
+        new_rightmost_key = rightmost_key.shift_coord(1)
         temp_dict = LatticeDict()
         for j in range(self.dyn_max_l):
+            level_difference = self.dyn_max_l - j
             # add site at the right end
             lower_boundary_density_matrix = ptrace(
-                self.density_matrix[LatticeKey(n_max, self.dyn_max_l)],
-                self.dyn_max_l - j,
+                self.density_matrix[rightmost_key],
+                level_difference,
                 end="left",
             )
 
-            lower_level_n_r = n_max + 0.5 * (self.dyn_max_l - j)
+            lower_level_key = rightmost_key.get_lower_level_right(level_difference=level_difference)
+            new_lower_level_key = lower_level_key.shift_coord(1)
+
             if j == 0:
-                temp_dict[LatticeKey(lower_level_n_r + 1, j)] = (
+                temp_dict[new_lower_level_key] = (
                     self._state_boundary.lowest_level_right
                 )
 
-            temp_dict[LatticeKey(lower_level_n_r, j)] = lower_boundary_density_matrix
+            temp_dict[lower_level_key] = lower_boundary_density_matrix
             temp_dict += add_higher_level_site(
                 input_lattice=temp_dict,
-                key=LatticeKey(lower_level_n_r, j),
-                next_key=LatticeKey(lower_level_n_r + 1, j),
+                key=lower_level_key,
+                next_key=new_lower_level_key,
             )
 
-        self.density_matrix[LatticeKey(n_max + 1, self.dyn_max_l)] = temp_dict[
-            LatticeKey(n_max + 1, self.dyn_max_l)
-        ]
+        self.density_matrix[new_rightmost_key] = temp_dict[new_rightmost_key]
 
     def _attach_site_left(self):
         """
         Same as '_attach_site_right' but adds site on the left end.
         """
-        n_min = self.density_matrix.smallest_at_level(self.dyn_max_l)
+        leftmost_key = self.density_matrix.leftmost_key_at_level(self.dyn_max_l)
+        new_leftmost_key = leftmost_key.shift_coord(-1)
         temp_dict = LatticeDict()
         for j in range(self.dyn_max_l):
+            level_difference = self.dyn_max_l - j
             # add site at the left end
             lower_boundary_density_matrix = ptrace(
-                self.density_matrix[LatticeKey(n_min, self.dyn_max_l)],
-                self.dyn_max_l - j,
+                self.density_matrix[leftmost_key],
+                level_difference,
                 "right",
             )
 
-            lower_level_n_l = n_min - 0.5 * (self.dyn_max_l - j)
-
+            lower_level_key = leftmost_key.get_lower_level_left(level_difference=level_difference)
+            new_lower_level_key = lower_level_key.shift_coord(-1)
             if j == 0:
-                temp_dict[LatticeKey(lower_level_n_l - 1, j)] = (
+                temp_dict[new_lower_level_key] = (
                     self._state_boundary.lowest_level_left
                 )
 
-            temp_dict[LatticeKey(lower_level_n_l, j)] = lower_boundary_density_matrix
+            temp_dict[lower_level_key] = lower_boundary_density_matrix
             temp_dict += add_higher_level_site(
                 input_lattice=temp_dict,
-                key=LatticeKey(lower_level_n_l - 1, j),
-                next_key=LatticeKey(lower_level_n_l, j),
+                key=new_lower_level_key,
+                next_key=lower_level_key
             )
 
-        self.density_matrix[LatticeKey(n_min - 1, self.dyn_max_l)] = temp_dict[
-            LatticeKey(n_min - 1, self.dyn_max_l)
-        ]
+        self.density_matrix[new_leftmost_key] = temp_dict[new_leftmost_key]
 
     def check_convergence(
         self, sites_to_check_left: int, sites_to_check_right: int, tolerance: float

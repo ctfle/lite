@@ -237,7 +237,7 @@ def energy_current_mixedFieldIsing(density_matrix: LatticeDict) -> np.ndarray:
     current = np.zeros(int(n_max - n_min), dtype=np.complex128)
 
     for n_count, (first_key, first_rho) in enumerate(density_matrix.items_at_level(1)):
-        second_key = (first_key.coord + 1, first_key.level)
+        second_key = first_key.shift_coord(1)
         second_rho = density_matrix[second_key]
         current[n_count] = np.trace(first_term @ first_rho) - np.trace(
             second_term @ second_rho
