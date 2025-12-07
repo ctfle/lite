@@ -127,10 +127,13 @@ class LatticeDict(dict):
         return True
 
     def merge(self, other: LatticeDict):
-        """!
-        Merges two lattice dicts. This means it adds all the key-value pairs
-        which are not in self but in other
         """
+        Merges two lattice dicts. This means it adds all the key-value pairs
+        which are not in self but in other. Note: ignores existing key value pairs.
+        Existing pairs will not be updated!
+        """
+        if not isinstance(other, LatticeDict):
+            raise ValueError("Can only merge LatticeDicts")
         for key in other:
             if key in self:
                 continue
@@ -138,7 +141,7 @@ class LatticeDict(dict):
                 self[key] = other[key]
 
     def overlap(self, other: LatticeDict) -> list[LatticeKey]:
-        """!
+        """
         computes the overlap with 'other'
         :returns: the corresponding keys
         """
