@@ -231,11 +231,8 @@ class TestMinimization:
         )
         r = random_lattice_dict.deepcopy()
         r += build_three_lower_levels(r, level)
-        n_min, n_max = r.boundaries(level - 1)
         info_current_init = LatticeDict()
-        info_current_init += information_gradient(
-            r, level - 1, n_min, n_max, range_, random_hamiltonian.subsystem_hamiltonian
-        )
+        info_current_init += information_gradient(r, level - 1, random_hamiltonian)
         state = State(density_matrix=random_lattice_dict)
         information_minimizer = self.get_minimizer(
             hamiltonian=random_hamiltonian, level=level
@@ -247,9 +244,7 @@ class TestMinimization:
         # check information gradient remains unchanged
         r = random_lattice_dict.deepcopy()
         r += build_three_lower_levels(r, level)
-        info_gradient = information_gradient(
-            r, level - 1, n_min, n_max, range_, random_hamiltonian.subsystem_hamiltonian
-        )
+        info_gradient = information_gradient(r, level - 1, random_hamiltonian)
         for key, currents in info_gradient.items_at_level(level - 1):
             init_currents = info_current_init[key]
             assert np.allclose(init_currents, currents)

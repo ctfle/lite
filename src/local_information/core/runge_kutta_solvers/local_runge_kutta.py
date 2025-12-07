@@ -76,7 +76,6 @@ class LocalLindbladRungeKuttaSolver(RungeKuttaSolver):
                     coupling = entry[1]
                     id_ = LatticeKey(level=key.level, coord=e, name=tpe)
                     L = self._system_operator.L_operators[id_].toarray()
-                    # L_operators is a LatticeDict with keys LatticeKey(ell,m,tpe)
                     L_dagger = np.conjugate(np.transpose(L))
                     D += coupling * (
                         L @ density_matrix @ L_dagger

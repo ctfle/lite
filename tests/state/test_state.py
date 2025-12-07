@@ -396,21 +396,13 @@ class TestState:
     @pytest.mark.parametrize(
         "density_matrix, number_of_sites, max_level",
         [
+            (np.array([[0.5, 0.0], [0.0, 0.5]]), 10, 5),
+            (np.array([[0.9, 0.0], [0.0, 0.1]]), 10, 5),
             (
-                np.array([[0.5, 0.0], [0.0, 0.5]]),
+                # using X eigenstates with p=0.1 expanded in Z
+                0.5 * np.array([[1, 2 * 0.1 - 1], [2 * 0.1 - 1, 1]]),
                 10,
-                5
-            ),
-            (
-                np.array([[0.9, 0.0], [0.0, 0.1]]),
-                10,
-                5
-            ),
-            (
-                    # using X eigenstates with p=0.1 expanded in Z
-                    0.5 * np.array([[1, 2*0.1 - 1], [2*0.1 - 1, 1]]),
-                    10,
-                    5
+                5,
             ),
         ],
     )
@@ -435,21 +427,13 @@ class TestState:
     @pytest.mark.parametrize(
         "density_matrix, number_of_sites, max_level",
         [
+            (np.array([[0.5, 0.0], [0.0, 0.5]]), 10, 5),
+            (np.array([[0.9, 0.0], [0.0, 0.1]]), 10, 5),
             (
-                np.array([[0.5, 0.0], [0.0, 0.5]]),
+                # using X eigenstates with p=0.1 expanded in Z
+                0.5 * np.array([[1, 2 * 0.1 - 1], [2 * 0.1 - 1, 1]]),
                 10,
-                5
-            ),
-            (
-                np.array([[0.9, 0.0], [0.0, 0.1]]),
-                10,
-                5
-            ),
-            (
-                    # using X eigenstates with p=0.1 expanded in Z
-                    0.5 * np.array([[1, 2*0.1 - 1], [2*0.1 - 1, 1]]),
-                    10,
-                    5
+                5,
             ),
         ],
     )

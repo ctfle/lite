@@ -17,6 +17,11 @@ from local_information.lattice.lattice_dict import LatticeDict, LatticeKey
 from local_information.mpi.mpi import MultiProcessing
 from local_information.mpi.mpi_setup import COMM, RANK
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from local_information.typedefs import SystemOperator
+
 logger = logging.getLogger()
 
 
@@ -123,14 +128,14 @@ def compute_mutual_information_at_level(
 
 
 def compute_mutual_information(
-    denisty_matrices_on_all_levels: LatticeDict,
+    density_matrices_on_all_levels: LatticeDict,
     level: int,
 ) -> tuple[LatticeDict, LatticeDict]:
     """
     Compute the mutual information for each site of the information lattice.
     """
     # compute 2 lower levels and stores them in a separate LatticeDict
-    inf_dict = compute_von_Neumann_information(denisty_matrices_on_all_levels, level)
+    inf_dict = compute_von_Neumann_information(density_matrices_on_all_levels, level)
 
     # scatter `level` from root
     work_level = None
@@ -140,7 +145,9 @@ def compute_mutual_information(
 
     for i in range(2):
         if work_level - i - 1 >= 0:
-            inf_dict_lower = compute_von_Neumann_information(denisty_matrices_on_all_levels, level - i - 1)
+            inf_dict_lower = compute_von_Neumann_information(
+                density_matrices_on_all_levels, level - i - 1
+            )
             if RANK == 0:
                 inf_dict += inf_dict_lower
 
@@ -267,11 +274,10 @@ def anti_commutator(A: np.ndarray, B: np.ndarray) -> np.ndarray:
 def compute_commutator(
     rho_dict: LatticeDict,
     key: LatticeKey,
-    range_: int,
-    subsystem_hamiltonian: LatticeDict,
+    operator: SystemOperator,
     orientation: str,
 ) -> np.ndarray:
-    """!
+    """
     Computes the commutator of the density matrix in the enlarged system (left/right) with the corresponding
     subsystem Hamiltonian. We subtract the commutator in the subsystem defined by 'key' to extract the terms
     associated with coupling to the left/right.
@@ -284,28 +290,26 @@ def compute_commutator(
         raise ValueError("orientation must be 'left' or 'right'")
 
     reduce_range = 0
-    key_ = None
     search_for_key = True
-    distance = range_
+    distance = operator.range_
     DM = None
+    sub_key = None
     while search_for_key:
-        distance = range_ - reduce_range
+        distance = operator.range_ - reduce_range
 
         if orientation == "left":
-            key_ = LatticeKey(key.coord - 0.5 * distance, key.level + distance)
+            sub_key = key.left_up(distance)
         else:
-            key_ = LatticeKey(key.coord + 0.5 * distance, key.level + distance)
+            sub_key = key.right_up(distance)
 
-        try:
-            DM = rho_dict[key_]
+        if (DM := rho_dict.get(sub_key)) is not None:
             search_for_key = False
-        except KeyError:
-            search_for_key = True
+        else:
             reduce_range += 1
 
     DM_c = rho_dict[key]
-    H = subsystem_hamiltonian[key_]
-    H_c = subsystem_hamiltonian[key]
+    H = operator.subsystem_hamiltonian[sub_key]
+    H_c = operator.subsystem_hamiltonian[key]
 
     com = ptrace(commutator(H.toarray(), DM), distance, end=orientation)
     com_c = commutator(H_c.toarray(), DM_c)
@@ -314,39 +318,35 @@ def compute_commutator(
 
 
 def information_gradient(
-    rho_dict: LatticeDict,
+    density_matrix: LatticeDict,
     level: int,
-    n_min: float,
-    n_max: float,
-    range_: int,
-    subsystem_hamiltonian: LatticeDict,
+    operator: SystemOperator,
 ) -> LatticeDict[np.ndarray]:
     """
-    Computes the information gradient values on level ell. Separates the three possible cases:
-    ell=0, ell=1 and ell>1 (which all have different formulas).
+    Computes the information gradient values on level. Separates the three possible cases:
+    level=0, level=1 and level>1 (which all have different formulas).
     """
     inf_current = LatticeDict()
-    for n in list(np.arange(n_min, n_max + 1)):
-        key = LatticeKey(coord=n, level=level)
-        r_AB = rho_dict[key]
+    for key in density_matrix.keys_at_level(level):
+        r_AB = density_matrix[key]
+        # Note: the information gradient is given by -ln(rho) -1.
+        # -1 is not required since this term vanishes later on
+        # We compensate for the minus in compute_commutator
         info_gradient = np_logm(r_AB)
 
+        # subtract the current originating from lower levels
         if level >= 1:
-            r_B = rho_dict[key.get_lower_level_right()]
-            r_A = rho_dict[key.get_lower_level_left()]
+            r_B = density_matrix[key.get_lower_level_right()]
+            r_A = density_matrix[key.get_lower_level_left()]
             info_gradient -= np.kron(np.eye(2), np_logm(r_B)) + np.kron(
                 np_logm(r_A), np.eye(2)
             )
 
-        if level >= 2:
-            r_AnB = rho_dict[LatticeKey(n, level - 2)]
-            info_gradient -= np.kron(np.kron(np.eye(2), np.eye(len(r_AnB))), np.eye(2))
-
         commutator_left = compute_commutator(
-            rho_dict, key, range_, subsystem_hamiltonian, orientation="left"
+            density_matrix, key, operator, orientation="left"
         )
         commutator_right = compute_commutator(
-            rho_dict, key, range_, subsystem_hamiltonian, orientation="right"
+            density_matrix, key, operator, orientation="right"
         )
 
         current_left = np.trace(info_gradient @ commutator_left)
@@ -370,7 +370,7 @@ def one_shift(rho_dict: LatticeDict, alpha: float = 1.0) -> LatticeDict:
 def push_keys(rho_dict: LatticeDict, number: float) -> LatticeDict:
     return_dict = LatticeDict()
     for key in list(rho_dict):
-        new_key = LatticeKey(key.coord + number, key.level)
+        new_key = key.shift_coord(number)
         return_dict[new_key] = rho_dict[key]
 
     return return_dict

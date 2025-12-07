@@ -174,70 +174,54 @@ class RemoteRungeKuttaSolver(RungeKuttaSolver):
         if work_dict is not None:
             key_max_l_dim = work_dict.dim_at_level(dyn_max_l)
             # compute the rhs of the von-Neumann equation at level max_l and store it in work_dict
-            for m, k in enumerate(work_dict.keys_at_level(dyn_max_l)):
+            for m, key in enumerate(work_dict.keys_at_level(dyn_max_l)):
                 # m is the number of sites left to k
                 if m >= self.range_:
                     # the site is at least _range away form the boundary
-                    key_l = LatticeKey(
-                        k.coord - 0.5 * self.range_, dyn_max_l + self.range_
-                    )
-                    DM_l = work_dict[key_l]
-                    H_max_l_range = self._system_operator.subsystem_hamiltonian[key_l]
-                    # build commutator and trace out _range sites on the left
-                    _com_l = ptrace(
-                        commutator(H_max_l_range.toarray(), DM_l),
-                        self.range_,
-                        end="left",
-                    )
-
+                    distance = self.range_
                 else:
                     # the site is less than _range away form the left boundary
-                    key_l = LatticeKey(k.coord - 0.5 * m, dyn_max_l + m)
-                    DM_l = work_dict[key_l]
-                    H_max_l_m_ = self._system_operator.subsystem_hamiltonian[key_l]
-                    # build commutator and trace out _m_ sites on the left
-                    _com_l = ptrace(
-                        commutator(H_max_l_m_.toarray(), DM_l), m, end="left"
-                    )
+                    distance = m
+
+                key_l = key.left_up(distance)
+                DM_l = work_dict[key_l]
+                H_max_l_range = self._system_operator.subsystem_hamiltonian[key_l]
+                # build commutator and trace out _range sites on the left
+                _com_l = ptrace(
+                    commutator(H_max_l_range.toarray(), DM_l), distance, end="left"
+                )
 
                 # repeat the same for the right side
                 bar_m = (key_max_l_dim - 1) - m
                 if bar_m >= self.range_:
                     # the site is at least _range away form the boundary
-                    key_r = LatticeKey(
-                        k.coord + 0.5 * self.range_, dyn_max_l + self.range_
-                    )
-                    DM_r = work_dict[key_r]
-                    H_max_l_range = self._system_operator.subsystem_hamiltonian[key_r]
-                    # build commutator and trace out _range sites on the left
-                    _com_r = ptrace(
-                        commutator(H_max_l_range.toarray(), DM_r),
-                        self.range_,
-                        end="right",
-                    )
-
+                    distance = self.range_
                 else:
                     # the site is at less than _range away form the right boundary
-                    key_r = (k[0] + 0.5 * bar_m, dyn_max_l + bar_m)
-                    DM_r = work_dict[key_r]
-                    H_max_l_m_ = self._system_operator.subsystem_hamiltonian[key_r]
-                    # build commutator and trace out _range sites on the left
-                    _com_r = ptrace(
-                        commutator(H_max_l_m_.toarray(), DM_r), bar_m, end="right"
-                    )
+                    distance = bar_m
+
+                key_r = key.right_up(distance)
+                DM_r = work_dict[key_r]
+                H_max_l_range = self._system_operator.subsystem_hamiltonian[key_r]
+                # build commutator and trace out _range sites on the left
+                _com_r = ptrace(
+                    commutator(H_max_l_range.toarray(), DM_r),
+                    distance,
+                    end="right",
+                )
 
                 # the term at max_l is always the same
-                DM_c = work_dict[k]
-                H_max_l = self._system_operator.subsystem_hamiltonian[k]
+                DM_c = work_dict[key]
+                H_max_l = self._system_operator.subsystem_hamiltonian[key]
                 _com_c = commutator(H_max_l.toarray(), DM_c)
                 rhs = _com_l + _com_r - _com_c
 
                 # Lindblad terms: in this implementation only onsite terms are allowed
-                D = self.dissipator(k, DM_c)
+                D = self.dissipator(key, DM_c)
                 if D is not None:
                     rhs += 1j * D
 
-                work_dict[k] = -1j * rhs
+                work_dict[key] = -1j * rhs
 
             # drop everything not at level max_l
             work_dict.kill_all_except(dyn_max_l)

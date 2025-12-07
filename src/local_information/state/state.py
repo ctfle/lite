@@ -290,7 +290,7 @@ class State:
         return all_levels
 
     def get_information_lattice(
-            self, density_matrix_on_all_levels: LatticeDict
+        self, density_matrix_on_all_levels: LatticeDict
     ) -> LatticeDict:
         """
         Computes the information lattice (and optionally the density matrix dictionary) on all different scales
@@ -306,7 +306,9 @@ class State:
         while ell >= 0 and not stop:
             # compute_mutual_information_at_level returns None for lower_level_dict on all RANK !=0
             # mutual_information is broadcasted
-            mutual_information = compute_mutual_information(density_matrix_on_all_levels, ell)
+            mutual_information = compute_mutual_information(
+                density_matrix_on_all_levels, ell
+            )
             inf_dict += mutual_information
             if RANK == 0:
                 ell -= 1
@@ -322,7 +324,7 @@ class State:
         Computes the information current on all the sites up to dyn_max_l - range_
         (range_ is the range of the given Hamiltonian).
         Each site of the information current lattice has two elements since there are
-        (at least) two currents
+        (at least) two currents.
         """
         # compute the currents to/from higher levels up to level 'dyn_max_l - range_'
         current_dict = LatticeDict()
@@ -348,16 +350,13 @@ class State:
                 current_dict += information_gradient(
                     all_levels,
                     ell,
-                    n_min + operator.range_,
-                    n_max - operator.range_,
-                    operator.range_,
-                    operator.subsystem_hamiltonian,
+                    operator,
                 )
 
         return current_dict
 
     def reduce_to_level(self, level: int, pop_boundary: bool = False):
-        """ Reduces the level to `level` """
+        """Reduces the level to `level`"""
         if self.dyn_max_l >= level:
             for ell in range(self.dyn_max_l, level, -1):
                 self.density_matrix = compute_lower_level(self.density_matrix, ell)
@@ -393,13 +392,13 @@ class State:
                 end="left",
             )
 
-            lower_level_key = rightmost_key.get_lower_level_right(level_difference=level_difference)
+            lower_level_key = rightmost_key.get_lower_level_right(
+                level_difference=level_difference
+            )
             new_lower_level_key = lower_level_key.shift_coord(1)
 
             if j == 0:
-                temp_dict[new_lower_level_key] = (
-                    self._state_boundary.lowest_level_right
-                )
+                temp_dict[new_lower_level_key] = self._state_boundary.lowest_level_right
 
             temp_dict[lower_level_key] = lower_boundary_density_matrix
             temp_dict += add_higher_level_site(
@@ -426,18 +425,18 @@ class State:
                 "right",
             )
 
-            lower_level_key = leftmost_key.get_lower_level_left(level_difference=level_difference)
+            lower_level_key = leftmost_key.get_lower_level_left(
+                level_difference=level_difference
+            )
             new_lower_level_key = lower_level_key.shift_coord(-1)
             if j == 0:
-                temp_dict[new_lower_level_key] = (
-                    self._state_boundary.lowest_level_left
-                )
+                temp_dict[new_lower_level_key] = self._state_boundary.lowest_level_left
 
             temp_dict[lower_level_key] = lower_boundary_density_matrix
             temp_dict += add_higher_level_site(
                 input_lattice=temp_dict,
                 key=new_lower_level_key,
-                next_key=lower_level_key
+                next_key=lower_level_key,
             )
 
         self.density_matrix[new_leftmost_key] = temp_dict[new_leftmost_key]
@@ -478,12 +477,16 @@ class State:
         """
         if end == "left":
             lowest_level = ptrace(
-                self.density_matrix[LatticeKey(n_value, self.dyn_max_l)], self.dyn_max_l, "right"
+                self.density_matrix[LatticeKey(n_value, self.dyn_max_l)],
+                self.dyn_max_l,
+                "right",
             )
             boundary_density_matrix = self._state_boundary.lowest_level_left
         elif end == "right":
             lowest_level = ptrace(
-                self.density_matrix[LatticeKey(n_value, self.dyn_max_l)], self.dyn_max_l, "left"
+                self.density_matrix[LatticeKey(n_value, self.dyn_max_l)],
+                self.dyn_max_l,
+                "left",
             )
             boundary_density_matrix = self._state_boundary.lowest_level_right
         else:

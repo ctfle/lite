@@ -18,13 +18,16 @@ from cattrs.gen import make_dict_structure_fn, make_dict_unstructure_fn, overrid
 from local_information.lattice.lattice_dict import LatticeDict
 from local_information.mpi.mpi_setup import RANK
 
-from local_information.typedefs import SystemOperator
+from typing import TYPE_CHECKING
 from local_information.operators.observables import (
     diff_const,
     diff_length,
     energy_distribution,
 )
 from local_information.state.state import State
+
+if TYPE_CHECKING:
+    from local_information.typedefs import SystemOperator
 
 logger = logging.getLogger()
 

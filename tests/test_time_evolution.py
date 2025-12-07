@@ -13,7 +13,11 @@ from local_information.state.state import State
 from local_information.time_evolution import ClosedSystem
 from local_information.config.monitor import DataContainer, DataConfig
 from local_information.core.petz_map import ptrace
-from local_information.lattice.lattice_dict import LatticeDict, keys_from_iterable, LatticeKey
+from local_information.lattice.lattice_dict import (
+    LatticeDict,
+    keys_from_iterable,
+    LatticeKey,
+)
 from local_information.core.utils import Status
 
 np.random.seed(42)

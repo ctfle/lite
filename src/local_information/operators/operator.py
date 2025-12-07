@@ -57,13 +57,6 @@ class Operator:
                 value = np.trace(rho_dict[key] @ self.operator[key].toarray())
                 expt_val_dict[key] = value
                 expt_val += value
-            # n_min, n_max = rho_dict.boundaries(self.range_)
-            # for n in np.arange(n_min, n_max + 1):
-            #     key = LatticeKey(n, self.range_)
-            #     print(key)
-            #     value = np.trace(rho_dict[key] @ self.operator[key].toarray())
-            #     expt_val_dict[key] = value
-            #     expt_val += value
 
         expt_val_dict = COMM.bcast(expt_val_dict, root=0)
         expt_val = COMM.bcast(expt_val, root=0)

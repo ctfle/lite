@@ -92,7 +92,8 @@ class TestLatticeDict:
         vals = [
             np.array(
                 [[0.001, 0, 0, 0], [0, 0.997, 0, 0], [0, 0, 0.001, 0], [0, 0, 0, 0.001]]
-            ) for j in range(5)
+            )
+            for j in range(5)
         ]
         keys = keys_from_iterable([(1, 1 + j) for j in range(5)])
         return LatticeDict.from_list(keys, vals)
@@ -102,10 +103,12 @@ class TestLatticeDict:
         vals = [
             np.array(
                 [[0.25, 0, 0, 0], [0, 0.25, 0, 0], [0, 0, 0.25, 0], [0, 0, 0, 0.25]]
-            ) for j in range(5)
+            )
+            for j in range(5)
         ]
         keys = keys_from_iterable([(1, 1 + j) for j in range(5)])
         return LatticeDict.from_list(keys, vals)
+
     def test_lattice_dict_sum(self, test_lattice_dict1, test_lattice_dict2):
         sum_dict = test_lattice_dict1 + test_lattice_dict2
         sum_keys = set(test_lattice_dict1.keys()).union(set(test_lattice_dict2.keys()))
@@ -182,7 +185,6 @@ class TestLatticeDict:
             if key in overlap:
                 assert np.allclose(test_lattice_dict6[key], overlap[key])
             assert key in test_lattice_dict6
-
 
     def test_kill_all_except(self, test_lattice_dict4):
         test_lattice_dict4.kill_all_except(6)

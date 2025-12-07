@@ -19,7 +19,9 @@ class TestScatterGather:
     def random_lattice(self, request):
         size, level = request.param
         random_matrix_dict = {
-            LatticeKey(n, level): np.random.uniform(size=(2 ** (level + 1), 2 ** (level + 1)))
+            LatticeKey(n, level): np.random.uniform(
+                size=(2 ** (level + 1), 2 ** (level + 1))
+            )
             for n in range(size)
         }
         return LatticeDict.from_dict(random_matrix_dict)
@@ -28,13 +30,15 @@ class TestScatterGather:
     def multi_level_random_lattice(self, request):
         size, level = request.param
         random_matrix_dict = {
-            LatticeKey(n, level): np.random.uniform(size=(2 ** (level + 1), 2 ** (level + 1)))
+            LatticeKey(n, level): np.random.uniform(
+                size=(2 ** (level + 1), 2 ** (level + 1))
+            )
             for n in range(size)
         }
         lattice_at_level = LatticeDict.from_dict(random_matrix_dict)
 
         random_matrix_dict_higher_level = {
-           LatticeKey (n + 0.5, level + 1): np.random.uniform(
+            LatticeKey(n + 0.5, level + 1): np.random.uniform(
                 size=(2 ** (level + 1), 2 ** (level + 1))
             )
             for n in range(size - 1)

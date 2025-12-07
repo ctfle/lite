@@ -173,7 +173,7 @@ class Projector:
     def _get_commutator_of_info_gradient_with_subsystem_hamiltonian(
         self, key: LatticeKey, orientation: str
     ) -> np.ndarray:
-        """computes the commutator of Eq. (25) of PRX QUANTUM 5, 020352"""
+        """Computes the commutator of Eq. (25) of PRX QUANTUM 5, 020352"""
         H_c = self._system_operator.subsystem_hamiltonian[key]
         if orientation == "left":
             # get the relevant parts of the information gradient
@@ -181,8 +181,7 @@ class Projector:
             enlarged_inf_grad = np.kron(np.eye(2**self.range_) / 2, info_gradient)
 
             # get the subsystem Hamiltonian
-            sub_key = LatticeKey(key.coord - 0.5 * self.range_, key.level + self.range_)
-            H = self._system_operator.subsystem_hamiltonian[sub_key]
+            H = self._system_operator.subsystem_hamiltonian[key.left_up(self.range_)]
 
             # compute the commutator
             com = commutator(enlarged_inf_grad, H.toarray())
@@ -198,8 +197,7 @@ class Projector:
             )
 
             # get the subsystem Hamiltonian
-            sub_key = LatticeKey(key.coord + 0.5 * self.range_, key.level + self.range_)
-            H = self._system_operator.subsystem_hamiltonian[sub_key]
+            H = self._system_operator.subsystem_hamiltonian[key.right_up(self.range_)]
 
             # compute the commutators
             com = commutator(enlarged_inf_grad, H.toarray())

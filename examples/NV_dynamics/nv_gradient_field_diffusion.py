@@ -104,8 +104,10 @@ def x_magnetization(rho):
 
 
 # directory to store the data
-checkpoint_folder = (f"./data/2_NV_diffusion={dissipation_strength}_J={J}_L={L}_rtrunc={r_truncation}"
-                     f"_mean_dis={mean_dis}_delta_phi={delta_phi}_num_pol={num_polarized_sites}")
+checkpoint_folder = (
+    f"./data/2_NV_diffusion={dissipation_strength}_J={J}_L={L}_rtrunc={r_truncation}"
+    f"_mean_dis={mean_dis}_delta_phi={delta_phi}_num_pol={num_polarized_sites}"
+)
 
 # DataConfig and DataContainer is needed to communicate which observables to measure and checkpoint
 data_config = li.DataConfig(

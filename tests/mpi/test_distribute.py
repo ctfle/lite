@@ -12,7 +12,9 @@ class TestDistributeTasks:
     def random_lattice(self, request):
         size, level = request.param
         random_matrix_dict = {
-            LatticeKey(n, level): np.random.uniform(size=(2 ** (level + 1), 2 ** (level + 1)))
+            LatticeKey(n, level): np.random.uniform(
+                size=(2 ** (level + 1), 2 ** (level + 1))
+            )
             for n in range(size)
         }
         return LatticeDict.from_dict(random_matrix_dict)
