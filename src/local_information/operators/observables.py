@@ -163,7 +163,7 @@ def onsite_operator_diff_const(
 
 def energy_distribution(
     density_matrix: LatticeDict, operator: SystemOperator
-) -> LatticeDict:
+) -> LatticeDict[float]:
     """
     Computes the energy distribution for given Hamiltonian elements hamiltonian_operator_dict
     and the state given by rho_dict.

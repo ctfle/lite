@@ -193,7 +193,6 @@ class System(ABC):
             information_dict.values_at_level(self.dyn_max_l)
         )
 
-        # self.state.total_information = np.sum(list(information_dict.values()))
         self.data.update_default_observables(
             density_matrix=density_matrices_on_all_levels,
             information_dict=information_dict,

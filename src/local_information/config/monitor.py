@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import List, AnyStr, Dict, Any
 from typing import Union
 
+import numpy as np
 import yaml
 from attrs import define
 from cattrs import structure, unstructure, Converter
@@ -117,12 +118,12 @@ class DataContainer:
         self._get_empty_container()
 
     def _get_empty_container(self):
-        self.default_observables_dict: Dict[AnyStr, list] = (
+        self.default_observables_dict: dict[str, list] = (
             self.set_default_observables_dict()
         )
         # hand over all custom observables
         if self.config.observables:
-            self.custom_observables_dict: Dict[AnyStr, list] = dict()
+            self.custom_observables_dict: dict[str, list] = dict()
             for observable in self.config.observables:
                 self.custom_observables_dict[observable.__name__] = []
         else:
@@ -137,8 +138,8 @@ class DataContainer:
         """save config as yaml"""
         self.config.to_yaml(folder)
 
-    def set_default_observables_dict(self) -> dict:
-        default_obs_dict = dict()
+    def set_default_observables_dict(self) -> dict[str, list]:
+        default_obs_dict: dict[str, list] = dict()
         for field_name, value in unstructure(self.config).items():
             if field_name == "observables":
                 continue
@@ -180,10 +181,7 @@ class DataContainer:
             path = Path(folder)
             path.mkdir(parents=True, exist_ok=True)
 
-            # save default data
             self._save_default_observables(path=path, warning=warning)
-
-            # save custom observables
             self._save_custom_observables(path=path, warning=warning)
             logger.info(f"saved data under {path}")
 
@@ -329,11 +327,11 @@ class DefaultObservables:
     def __call__(
         self,
         observable: str,
-        density_matrix: LatticeDict,
-        information_dict: LatticeDict,
+        density_matrix: LatticeDict[np.ndarray],
+        information_dict: LatticeDict[float],
         state: State,
         operator: SystemOperator,
-    ) -> Union[None, Any]:
+    ) -> Any:
         self.state = state
         self.operator = operator
         self.density_matrix = density_matrix
@@ -349,27 +347,27 @@ class DefaultObservables:
     def compute_observable(self, observable: str) -> Any:
         return self.observables[observable]()
 
-    def get_diffusion_const(self):
+    def get_diffusion_const(self) -> float:
         return diff_const(
             density_matrix=self.density_matrix, state=self.state, operator=self.operator
         )
 
-    def get_diffusion_length(self):
+    def get_diffusion_length(self) -> float:
         return diff_length(density_matrix=self.density_matrix, operator=self.operator)
 
-    def get_energy_distribution(self):
+    def get_energy_distribution(self) -> LatticeDict[float]:
         return energy_distribution(
             density_matrix=self.density_matrix, operator=self.operator
         )
 
-    def get_system_size(self):
+    def get_system_size(self) -> int:
         return self.state.system_size
 
-    def get_time(self):
+    def get_time(self) -> float:
         return self.state.current_time
 
-    def get_information_lattice(self):
+    def get_information_lattice(self) -> LatticeDict[float]:
         return self.information_dict
 
-    def get_information_current(self):
+    def get_information_current(self) -> dict:
         return self.state.get_information_current(self.operator)

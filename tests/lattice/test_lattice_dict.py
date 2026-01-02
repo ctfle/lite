@@ -6,6 +6,7 @@ from local_information.lattice.lattice_dict import (
     keys_from_iterable,
     LatticeKey,
 )
+from local_information.mpi.mpi_setup import COMM
 
 
 class SomeArithmetic:
@@ -249,7 +250,7 @@ class TestLatticeDict:
         for key, value in summed_dict.items():
             assert np.allclose(value, test_lattice_dict3[key])
 
-    def test_settitem_fails_1(self):
+    def test_setitem_fails_1(self):
         test_dict = LatticeDict()
         for i in range(10):
             test_dict[LatticeKey(i, i + 1)] = 1.2 + i
@@ -260,7 +261,7 @@ class TestLatticeDict:
         with pytest.raises(TypeError):
             test_dict[i] = 1
 
-    def test_settitem_fails_2(self):
+    def test_setitem_fails_2(self):
         test_dict = LatticeDict()
         for i in range(10):
             test_dict[LatticeKey(i, i + 1)] = 1.2 + i
@@ -269,30 +270,80 @@ class TestLatticeDict:
 
         test_dict = LatticeDict()
         with pytest.raises(TypeError):
-            test_dict[(i, i)] = "test"
+            test_dict[LatticeKey(1, 1)] = "test"
 
-    def test_arithemtic_class(self):
+    def test_arithmetic_class(self):
         test_dict = LatticeDict()
-        assert test_dict._is_numeric is False
-        assert test_dict._type is None
+        assert test_dict._value_type is None
 
         for i in range(10):
             test_dict[LatticeKey(i, i)] = SomeArithmetic()
-        assert test_dict._type == SomeArithmetic
+        assert test_dict._value_type == SomeArithmetic
 
-    def test_other_arithemtic_class(self):
+    def test_other_arithmetic_class(self):
         test_dict = LatticeDict()
         k = 10
         for i in range(k):
             test_dict[LatticeKey(i, i)] = SomeArithmetic()
-        assert test_dict._type == SomeArithmetic
+        assert test_dict._value_type == SomeArithmetic
         with pytest.raises(TypeError):
             test_dict[LatticeKey(k, k)] = OtherArithmetic()
 
-    def test_non_arithemtic_class(self):
+    def test_non_arithmetic_class(self):
         test_dict = LatticeDict()
         with pytest.raises(TypeError):
             test_dict[LatticeKey(1, 2)] = NonArithmetic()
+
+    @pytest.mark.parametrize(
+        "lattice1, lattice2, compatible",
+        [
+            (LatticeDict(), LatticeDict(), True),
+            (LatticeDict.from_dict({LatticeKey(1, 2): 1.0}), LatticeDict(), True),
+            (LatticeDict(), LatticeDict.from_dict({LatticeKey(1, 2): 1.0}), True),
+            (
+                LatticeDict.from_dict({LatticeKey(1, 2): 2.0}),
+                LatticeDict.from_dict({LatticeKey(1, 2): 1.0}),
+                True,
+            ),
+            (
+                LatticeDict.from_dict({LatticeKey(1, 2): 2}),
+                LatticeDict.from_dict({LatticeKey(1, 2): 1.012345}),
+                True,
+            ),
+            (
+                LatticeDict.from_dict({LatticeKey(1, 2): 2j}),
+                LatticeDict.from_dict({LatticeKey(1, 2): 1.012345}),
+                True,
+            ),
+            (
+                LatticeDict.from_dict({LatticeKey(1, 2): np.array([1.0, 2.0])}),
+                LatticeDict(),
+                True,
+            ),
+            (
+                LatticeDict(),
+                LatticeDict.from_dict({LatticeKey(1, 2): np.array([1.0, 2.0])}),
+                True,
+            ),
+            (
+                LatticeDict.from_dict({LatticeKey(1, 2): np.array([1.0, 2.0])}),
+                LatticeDict.from_dict({LatticeKey(1, 2): 1.0}),
+                False,
+            ),
+            (
+                LatticeDict.from_dict({LatticeKey(1, 2): 1.0}),
+                LatticeDict.from_dict({LatticeKey(1, 2): np.array([1.0, 2.0])}),
+                False,
+            ),
+        ],
+    )
+    def test_check_compatibility(self, lattice1, lattice2, compatible):
+        assert lattice1._check_value_compatibility(lattice2) == compatible
+
+    def test_serialisation_deserialisation(self):
+        lattice = LatticeDict.from_dict({LatticeKey(1, 2): 1.0})
+        COMM.bcast(lattice, root=0)
+        assert lattice._value_type == float
 
 
 class TestLatticeDictIterator:

@@ -14,6 +14,7 @@ from typing import (
     Sequence,
     TypeVar,
     Generic,
+    Any,
 )
 
 import numpy as np
@@ -29,7 +30,7 @@ T = TypeVar("T")
 
 
 class LatticeDict(dict, Generic[T]):
-    """!
+    """
     A class that extends functionalities of dict to compute and handle the information lattice.
     'LatticeDict's can be added and scalar multiplied. If the values are not numeric, they must
     be of the same type that allows arithmetic operations.
@@ -37,44 +38,75 @@ class LatticeDict(dict, Generic[T]):
 
     def __init__(
         self,
-        items: ItemsView[LatticeKey, ArrayLike]
-        | Iterator[LatticeKey, ArrayLike] = iter(dict()),
+        items: ItemsView[LatticeKey, ArrayLike] | Iterator[LatticeKey, ArrayLike] = (),
     ):
         super().__init__()
-        types = []
+
+        self._value_type: Type | None = None
+
         for key, value in items:
-            if not isinstance(key, LatticeKey):
-                raise ValueError
+            self._validate_and_set_item(key, value)
 
-            if not isinstance(value, Number):
-                if not isinstance(value, Arithmetics):
-                    raise ValueError(
-                        f"{type(value)} does not satisfy required arithmetics"
-                        f" (addition, subtraction and scalar multiplication)"
-                    )
-                types += [type(value)]
-            self[key] = value
+    def _validate_and_set_item(self, key: Any, value: Any) -> None:
+        key = self._check_key(key)
+        self._validate_value(value)
+        super().__setitem__(key, value)
 
-        if not all((x is types[0]) for x in types):
-            raise TypeError("inhomogeneous types")
+    def _validate_value(self, value: Any) -> None:
+        self._check_value_arithmetics(value)
+        self._check_value_type_consistency(value)
 
-    @property
-    def _type(self) -> None | Type:
-        keys = list(self.keys())
-        if keys:
-            value = self[keys[0]]
-            return type(value)
-        else:
-            return None
+    @staticmethod
+    def _check_value_arithmetics(value: Any) -> None:
+        if isinstance(value, Number):
+            return
+        if isinstance(value, Arithmetics):
+            return
+        raise TypeError(
+            f"Value {value!r} of type {type(value)!r} does not support required "
+            "arithmetic operations (addition, subtraction, scalar multiplication)"
+        )
 
-    @property
-    def _is_numeric(self) -> bool:
-        keys = list(self.keys())
-        if keys:
-            value = self[keys[0]]
-            return isinstance(value, Number)
-        else:
-            return False
+    def _check_value_type_consistency(self, value: Any) -> None:
+        self._ensure_value_type_attr()
+        if self._value_type is None:
+            # First item defines the type of this lattice
+            self._value_type = type(value)
+            return
+
+        if isinstance(value, Number) and issubclass(self._value_type, Number):
+            # All numeric types allowed together
+            return
+
+        if type(value) is not self._value_type:
+            raise TypeError(
+                f"Inhomogeneous value type: expected {self._value_type!r}, "
+                f"got {type(value)!r}"
+            )
+
+    @staticmethod
+    def _check_key(key: Any) -> LatticeKey:
+        if not isinstance(key, LatticeKey):
+            raise TypeError(f"Key {key!r} has type {type(key)!r}, expected LatticeKey")
+        return key
+
+    def _check_value_compatibility(self, other: LatticeDict):
+        compatible = True
+        if self._value_type is not None and other._value_type is not None:
+            if self._value_type is not other._value_type:
+                compatible = issubclass(self._value_type, Number) and issubclass(
+                    other._value_type, Number
+                )
+        return compatible
+
+    def _ensure_value_type_attr(self) -> None:
+        # This must *not* assume __init__ has run.
+        # Guard is necessary since we use MPI where we serialise objects using pickle
+        # which are not calling the init but LatticeDict.__new__(LatticeDict) and uses
+        # __setitem__ for each key value pair. To ensure _value_type is set we use the guard
+        # when calling __setitem__
+        if not hasattr(self, "_value_type"):
+            self._value_type = None
 
     @classmethod
     def from_list(
@@ -86,11 +118,18 @@ class LatticeDict(dict, Generic[T]):
     def from_dict(cls, input_dict: dict[LatticeKey, ArrayLike]) -> LatticeDict:
         return cls(input_dict.items())
 
-    def __add__(self, other: LatticeDict) -> LatticeDict:
-        numeric_or_empty = self._type is None or other._type is None
-        if self._type != other._type and not numeric_or_empty:
+    def to_dict(self) -> dict[tuple[float, int], ArrayLike]:
+        output = dict()
+        for key, value in self.items():
+            output[key.to_tuple()] = value
+        return output
+
+    def __add__(self, other: LatticeDict[T]) -> LatticeDict[T]:
+        if not self._check_value_compatibility(other):
             raise TypeError(
-                "cannot add {} and {} objects".format(self._type, other._type)
+                "cannot add {} and {} objects".format(
+                    self._value_type, other._value_type
+                )
             )
 
         sum_dict = LatticeDict()
@@ -106,19 +145,19 @@ class LatticeDict(dict, Generic[T]):
 
         return sum_dict
 
-    def __mul__(self, other: Number) -> LatticeDict:
+    def __mul__(self, value: Number) -> LatticeDict[T]:
         """scalar multiplication"""
-        if isinstance(other, Number):
+        if isinstance(value, Number):
             result = LatticeDict()
             for key in list(self.keys()):
-                result[key] = self[key] * other
+                result[key] = self[key] * value
         else:
             raise ValueError
 
         return result
 
-    def __rmul__(self, other: Number) -> LatticeDict:
-        return self.__mul__(other)
+    def __rmul__(self, value: Number) -> LatticeDict:
+        return self.__mul__(value)
 
     def __sub__(self, other: LatticeDict) -> LatticeDict:
         return self.__add__(other.__mul__(-1))
@@ -162,29 +201,8 @@ class LatticeDict(dict, Generic[T]):
                 overlap += [key]
         return overlap
 
-    def __setitem__(self, key: LatticeKey, value):
-        if not isinstance(key, LatticeKey):
-            raise TypeError("key must be LatticeKey")
-
-        if not isinstance(value, Arithmetics):
-            raise TypeError(
-                f"incompatible type: {type(value)} does not satisfy arithmetics"
-            )
-
-        if self._type is None:
-            super().__setitem__(key, value)
-        else:
-            if self._is_numeric and isinstance(value, Number):
-                super().__setitem__(key, value)
-            else:
-                if self._type == type(value):
-                    super().__setitem__(key, value)
-                else:
-                    raise TypeError(
-                        "wrong data type: type is {} but {} was given",
-                        self._type,
-                        type(value),
-                    )
+    def __setitem__(self, key: LatticeKey, value: Any):
+        self._validate_and_set_item(key, value)
 
     def smallest_at_level(self, level: int) -> float | None:
         n_list = self.coords_at_level(level)
@@ -265,7 +283,10 @@ class LatticeDict(dict, Generic[T]):
         return daggered
 
     def to_array(self) -> LatticeDict:
-        if self._type == sparse.csr_matrix or self._type == sparse.csc_matrix:
+        if (
+            self._value_type == sparse.csr_matrix
+            or self._value_type == sparse.csc_matrix
+        ):
             array_dict = LatticeDict()
             for key, val in self.items():
                 array_dict[key] = val.toarray()
@@ -336,7 +357,7 @@ class LatticeKey:
         if isinstance(value, int):
             self._level = value
         elif isinstance(value, float):
-            if value.is_integer():  # checks if float is like 1.0, 2.0 etc
+            if value.is_integer():
                 self._level = int(value)
             else:
                 raise ValueError(
@@ -346,6 +367,12 @@ class LatticeKey:
     @classmethod
     def from_tuple(cls, key: tuple[float, int], name: str | None = None) -> LatticeKey:
         return cls(coord=key[0], level=key[1], name=name)
+
+    def to_tuple(self) -> tuple[float, int, str] | tuple[float, int]:
+        if self.name:
+            return self.coord, self.level, self.name
+        else:
+            return self.coord, self.level
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, LatticeKey):
