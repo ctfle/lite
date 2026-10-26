@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - run: pip install ruff
+      # Hard errors only (syntax errors, undefined names). The full rule set
+      # still reports a few hundred findings that are not gated yet.
+      - run: ruff check --select E9,F63,F7,F82 .
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install MPI
+        run: sudo apt-get update && sudo apt-get install -y libopenmpi-dev openmpi-bin
+      - name: Install package
+        run: pip install -e '.[dev]'
+      - name: Serial tests
+        run: pytest
+      - name: MPI tests
+        run: mpirun --oversubscribe --allow-run-as-root -n 2 python -m pytest --with-mpi tests/mpi
