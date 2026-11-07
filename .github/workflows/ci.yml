@@ -4,13 +4,20 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
 
+# a newer push to the same branch or PR supersedes the running one
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -21,18 +28,50 @@ jobs:
       # still reports a few hundred findings that are not gated yet.
       - run: ruff check --select E9,F63,F7,F82 .
 
-  test:
+  # the whole test suite, run in a single process
+  tests-serial:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.10"
+          cache: pip
+          cache-dependency-path: pyproject.toml
       - name: Install MPI
-        run: sudo apt-get update && sudo apt-get install -y libopenmpi-dev openmpi-bin
+        run: sudo apt-get install -y --no-install-recommends libopenmpi-dev openmpi-bin
+        timeout-minutes: 10
+      - name: Install package
+        run: pip install -e '.[dev]' pytest-timeout
+      - name: Run all tests
+        run: pytest --timeout=900 -ra --junitxml=junit-serial.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: junit-serial
+          path: junit-serial.xml
+
+  # only the tests marked `mpi`, run on 2 processes. The unmarked tests in
+  # tests/mpi are serial tests and are covered by the job above.
+  tests-mpi:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      OMPI_ALLOW_RUN_AS_ROOT: "1"
+      OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install MPI
+        run: sudo apt-get install -y --no-install-recommends libopenmpi-dev openmpi-bin
+        timeout-minutes: 10
       - name: Install package
         run: pip install -e '.[dev]'
-      - name: Serial tests
-        run: pytest
-      - name: MPI tests
-        run: mpirun --oversubscribe --allow-run-as-root -n 2 python -m pytest --with-mpi tests/mpi
+      - name: Run MPI tests on 2 ranks
+        # `timeout` ends the whole mpirun if one rank hangs while the other waits
+        run: timeout 30m mpirun --oversubscribe -n 2 python -m pytest --only-mpi -ra tests/mpi
