@@ -52,7 +52,7 @@ jobs:
           name: junit-serial
           path: junit-serial.xml
 
-  # only the tests marked `mpi`, run on 2 processes. The unmarked tests in
+  # only the tests marked `mpi` (`-m mpi`), run on 2 processes. The unmarked tests in
   # tests/mpi are serial tests and are covered by the job above.
   tests-mpi:
     runs-on: ubuntu-latest
@@ -74,4 +74,4 @@ jobs:
         run: pip install -e '.[dev]'
       - name: Run MPI tests on 2 ranks
         # `timeout` ends the whole mpirun if one rank hangs while the other waits
-        run: timeout 30m mpirun --oversubscribe -n 2 python -m pytest --only-mpi -ra tests/mpi
+        run: timeout 30m mpirun --oversubscribe -n 2 python -m pytest --with-mpi -m mpi -ra tests/mpi
