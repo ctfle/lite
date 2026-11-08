@@ -4,7 +4,7 @@ import logging
 import os.path
 import pickle
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from importlib import import_module
 from pathlib import Path
 from typing import List, AnyStr, Dict, Any
@@ -110,7 +110,7 @@ class DataConfig:
 
 @dataclass
 class DataContainer:
-    config: DataConfig = DataConfig()
+    config: DataConfig = field(default_factory=DataConfig)
 
     def __post_init__(self):
         self.get_default_observables = DefaultObservables()
