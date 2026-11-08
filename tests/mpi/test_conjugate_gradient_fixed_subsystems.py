@@ -68,9 +68,13 @@ class TestConjugateGradientWithMPI:
                 assert rho_dict_after_minimization.keys_at_level(ell) is not None
             rho_dict_after_minimization.kill_all_except(level)
 
+        # `compute_mutual_information_at_level` uses MPI collectives, so every
+        # rank has to call it. Calling it on RANK 0 only leaves the ranks out of
+        # step and corrupts the MPI calls of the following tests.
+        _, mut_info = compute_mutual_information_at_level(
+            rho_dict_after_minimization, level
+        )
+        if RANK == 0:
             # check mutual information is lowered on input level
-            _, mut_info = compute_mutual_information_at_level(
-                rho_dict_after_minimization, level
-            )
             for key, info in mut_info.items_at_level(level):
                 assert info < mut_info_init[key]
