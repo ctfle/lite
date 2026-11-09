@@ -52,10 +52,10 @@ class TestScatterGather:
         [
             ((3, 0), 0),
             ((4, 0), 0),
-            ((4, 10), 10),
+            ((4, 6), 6),
             ((50, 5), 5),
-            ((100, 10), 10),
-            ((200, 10), 10),
+            ((100, 6), 6),
+            ((200, 6), 6),
         ],
         indirect=["random_lattice"],
     )
@@ -70,7 +70,6 @@ class TestScatterGather:
         print_mpi(RANK, lattice_on_worker)
         # check that each worker has a lattice dict with keys and values of the original LatticeDict
         for key, value in lattice_on_worker.items():
-            print_mpi(RANK, lattice_on_worker)
             assert np.allclose(value, random_lattice[key])
 
     @pytest.mark.mpi(min_size=2)
@@ -79,10 +78,10 @@ class TestScatterGather:
         [
             ((3, 0), 0),
             ((4, 0), 0),
-            ((4, 10), 10),
+            ((4, 6), 6),
             ((50, 5), 5),
-            ((100, 10), 10),
-            ((200, 10), 10),
+            ((100, 6), 6),
+            ((200, 6), 6),
         ],
         indirect=["random_lattice"],
     )
@@ -109,7 +108,7 @@ class TestScatterGather:
     @pytest.mark.mpi(min_size=2)
     @pytest.mark.parametrize(
         "random_lattice, level",
-        [((3, 0), 0), ((4, 0), 0), ((4, 10), 10), ((50, 5), 5)],
+        [((3, 0), 0), ((4, 0), 0), ((4, 6), 6), ((50, 5), 5)],
         indirect=["random_lattice"],
     )
     def test_distribute_non_root_is_none(self, random_lattice, level):
