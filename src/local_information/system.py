@@ -35,6 +35,8 @@ class System(ABC):
         self.state = init_state
         # config dataclass
         self.config = config
+        # Growth, boundary extension, and measurements share the solver's settings.
+        self.state.petz_config = self.config.runge_kutta_config
         # TimeEvolutionData
         self.data = data
         # Operator for time-evolution
@@ -198,6 +200,7 @@ class System(ABC):
             information_dict=information_dict,
             state=self.state,
             operator=self._system_operator,
+            solver=self.solver,
         )
         self.data.update_custom_observables(density_matrices_on_all_levels)
 

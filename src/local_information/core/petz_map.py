@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import math
 
 import numpy as np
 from scipy import sparse
@@ -24,8 +25,14 @@ class PetzMap:
         sqrt_method: bool = True,
         precomputed_sqrt_or_log_of_density_matrix_A: np.ndarray | None = None,
         precomputed_sqrt_or_log_of_density_matrix_B: np.ndarray | None = None,
+        precomputed_entropy_A: float | None = None,
+        precomputed_entropy_B: float | None = None,
+        smoothing_delta: float = 0.0,
     ):
         self.sqrt_method = sqrt_method
+        if not math.isfinite(smoothing_delta) or smoothing_delta < 0:
+            raise ValueError("smoothing_delta must be finite and >= 0")
+        self.smoothing_delta = smoothing_delta
 
         if key_A.coord < key_B.coord:
             self.key_A = key_A
@@ -41,6 +48,18 @@ class PetzMap:
 
             self.dens_A = density_matrix_B
             self.dens_B = density_matrix_A
+            # Keep all cached quantities attached to their original matrix.
+            (
+                precomputed_sqrt_or_log_of_density_matrix_A,
+                precomputed_sqrt_or_log_of_density_matrix_B,
+            ) = (
+                precomputed_sqrt_or_log_of_density_matrix_B,
+                precomputed_sqrt_or_log_of_density_matrix_A,
+            )
+            precomputed_entropy_A, precomputed_entropy_B = (
+                precomputed_entropy_B,
+                precomputed_entropy_A,
+            )
 
         self._precomputed_sqrt_or_log_density_matrix_A = (
             precomputed_sqrt_or_log_of_density_matrix_A
@@ -48,6 +67,8 @@ class PetzMap:
         self._precomputed_sqrt_or_log_density_matrix_B = (
             precomputed_sqrt_or_log_of_density_matrix_B
         )
+        self._precomputed_entropy_A = precomputed_entropy_A
+        self._precomputed_entropy_B = precomputed_entropy_B
 
         self.check_dimensions()
         self.check_relative_alignment()
@@ -121,6 +142,28 @@ class PetzMap:
             return np_logm(self.dens_B)
 
     @cached_property
+    def _eigendecomposition_A(self):
+        return diagonalize(self.dens_A)
+
+    @cached_property
+    def _eigendecomposition_B(self):
+        return diagonalize(self.dens_B)
+
+    @cached_property
+    def _entropy_A(self):
+        if self._precomputed_entropy_A is not None:
+            return self._precomputed_entropy_A
+        eigenvalues, _ = self._eigendecomposition_A
+        return _entropy_from_eigenvalues(eigenvalues)
+
+    @cached_property
+    def _entropy_B(self):
+        if self._precomputed_entropy_B is not None:
+            return self._precomputed_entropy_B
+        eigenvalues, _ = self._eigendecomposition_B
+        return _entropy_from_eigenvalues(eigenvalues)
+
+    @cached_property
     def sqrt_density_matrix_A(self):
         if (
             self.sqrt_method
@@ -128,7 +171,7 @@ class PetzMap:
         ):
             return self._precomputed_sqrt_or_log_density_matrix_A
         else:
-            return np_sqrt(self.dens_A)
+            return _sqrt_from_eigendecomposition(*self._eigendecomposition_A)
 
     @cached_property
     def sqrt_density_matrix_B(self):
@@ -138,7 +181,7 @@ class PetzMap:
         ):
             return self._precomputed_sqrt_or_log_density_matrix_B
         else:
-            return np_sqrt(self.dens_B)
+            return _sqrt_from_eigendecomposition(*self._eigendecomposition_B)
 
     def check_relative_alignment(self):
         if (
@@ -205,6 +248,18 @@ class PetzMap:
         rho_BuA = ptrace(self.dens_B, self._overlap, end="left")
         return rho_AuB, rho_BuA
 
+    @cached_property
+    def _inverse_sqrt_and_entropy_on_overlap(self):
+        """Reuse one overlap spectrum for the inverse square root and entropy."""
+        eigenvalues, eigenvectors = diagonalize(self._get_density_matrix_on_overlap)
+        roots = np.sqrt(eigenvalues)
+        entropy = _entropy_from_eigenvalues(eigenvalues)
+        if np.any(roots == 0.0):
+            # Preserve failure of the previous dense inverse for singular input.
+            raise np.linalg.LinAlgError("Singular matrix")
+        inverse_sqrt = (eigenvectors / roots) @ eigenvectors.conj().T
+        return inverse_sqrt, entropy
+
     def _sqrt_map(self):
         """uses the sqrt formula for the Petz map"""
         if self._overlap == 0:
@@ -222,52 +277,102 @@ class PetzMap:
     def _sqrt_map_from_mutual_information(self):
         """
         Compare the mutual information in (AuB, AnB) and in (AnB, BuA)
-        and apply the corresponding sqrt Petz map formula
+        and select or smoothly blend the two sqrt Petz map formulas.
         """
         rho_AuB, rho_BuA = self._density_matrices_without_overlap
         rho_AnB = self._get_density_matrix_on_overlap
+        inverse_sqrt_overlap, entropy_overlap = self._inverse_sqrt_and_entropy_on_overlap
+        information_overlap = np.log(len(rho_AnB)) - entropy_overlap
         # check the mutual information between the two different sqrt maps
-        mutual_information_on_A_and_intersect = mutual_information(
-            self.dens_A, rho_AuB, rho_AnB
+        mutual_information_on_A_and_intersect = (
+            (np.log(len(self.dens_A)) - self._entropy_A)
+            - information(rho_AuB)
+            - information_overlap
         )
-        mutual_information_on_B_and_intersect = mutual_information(
-            self.dens_B, rho_BuA, rho_AnB
+        mutual_information_on_B_and_intersect = (
+            (np.log(len(self.dens_B)) - self._entropy_B)
+            - information(rho_BuA)
+            - information_overlap
         )
 
-        # compare the different mutual information
-        # and do the sqrt map depending on the outcome
-        if (
+        difference = (
             mutual_information_on_A_and_intersect
-            >= mutual_information_on_B_and_intersect
-        ):
-            sqrt_A = np.kron(
-                np.eye(int(2**self._dimension_of_A_without_B)),
-                self.sqrt_density_matrix_B,
-            )
-            sqrt_AnB_inv = np.kron(
-                np.kron(
-                    np.eye(int(2**self._dimension_of_A_without_B)),
-                    np.linalg.inv(np_sqrt(rho_AnB)),
-                ),
-                np.eye(int(2**self._dimension_of_B_without_A)),
-            )
-            C = np.kron(self.dens_A, np.eye(int(2**self._dimension_of_B_without_A)))
+            - mutual_information_on_B_and_intersect
+        )
+        right_weight = self._right_sqrt_weight(difference)
+        if right_weight == 1.0:
+            return self._sqrt_candidate(inverse_sqrt_overlap, outer_right=True)
+        if right_weight == 0.0:
+            return self._sqrt_candidate(inverse_sqrt_overlap, outer_right=False)
+        # The correction is affine, so applying it once after blending preserves
+        # the same input marginals as correcting each candidate before blending.
+        left = self._sqrt_candidate(inverse_sqrt_overlap, outer_right=False)
+        right = self._sqrt_candidate(inverse_sqrt_overlap, outer_right=True)
+        return (1.0 - right_weight) * left + right_weight * right
 
+    def _right_sqrt_weight(self, difference: float) -> float:
+        """C-infinity transition for M_left - M_right within +/- delta nats.
+
+        Zero delta preserves the original >= branch, including its tie rule.
+        Outside the band only the selected candidate needs to be constructed.
+        """
+        delta = self.smoothing_delta
+        if delta == 0.0:
+            return float(difference >= 0.0)
+        if difference <= -delta:
+            return 0.0
+        if difference >= delta:
+            return 1.0
+        u = 0.5 * (1.0 + difference / delta)
+        # Arithmetic can round u to an endpoint just inside the band.
+        if u <= 0.0:
+            return 0.0
+        if u >= 1.0:
+            return 1.0
+        left = math.exp(-1.0 / u)
+        right = math.exp(-1.0 / (1.0 - u))
+        return left / (left + right)
+
+    def _sqrt_candidate(self, inverse_sqrt_overlap, *, outer_right: bool):
+        """Contract subsystem indices without identity-extended matrices.
+
+        a, b, c are the left-only, overlap, and right-only dimensions.
+        Each intermediate has at most the size of the combined density matrix.
+        """
+        a = int(2**self._dimension_of_A_without_B)
+        b = len(inverse_sqrt_overlap)
+        c = int(2**self._dimension_of_B_without_A)
+        if outer_right:
+            # T_BC = sqrt(rho_BC) (rho_B^-1/2 tensor I_C).
+            factor = np.einsum(
+                "bcuy,ux->bcxy",
+                self.sqrt_density_matrix_B.reshape(b, c, b, c),
+                inverse_sqrt_overlap, optimize=True,
+            )
+            intermediate = np.einsum(
+                "bcxy,axdz->abcdzy", factor, self.dens_A.reshape(a, b, a, b),
+                optimize=True,
+            )
+            candidate = np.einsum(
+                "abcdzy,efzy->abcdef", intermediate, factor.conj(),
+                optimize=True, order="C",
+            )
         else:
-            sqrt_A = np.kron(
-                self.sqrt_density_matrix_A,
-                np.eye(int(2**self._dimension_of_B_without_A)),
+            # T_AB = sqrt(rho_AB) (I_A tensor rho_B^-1/2).
+            factor = np.einsum(
+                "abxu,uy->abxy",
+                self.sqrt_density_matrix_A.reshape(a, b, a, b),
+                inverse_sqrt_overlap, optimize=True,
             )
-            sqrt_AnB_inv = np.kron(
-                np.kron(
-                    np.eye(int(2**self._dimension_of_A_without_B)),
-                    np.linalg.inv(np_sqrt(rho_AnB)),
-                ),
-                np.eye(int(2**self._dimension_of_B_without_A)),
+            intermediate = np.einsum(
+                "abxy,yczf->abcxzf", factor, self.dens_B.reshape(b, c, b, c),
+                optimize=True,
             )
-            C = np.kron(np.eye(int(2**self._dimension_of_A_without_B)), self.dens_B)
-
-        return sqrt_A @ sqrt_AnB_inv @ C @ sqrt_AnB_inv @ sqrt_A
+            candidate = np.einsum(
+                "abcxzf,dexz->abcdef", intermediate, factor.conj(),
+                optimize=True, order="C",
+            )
+        return candidate.reshape(a*b*c, a*b*c)
 
     def _exp_map(self):
         """
@@ -391,8 +496,18 @@ def np_expm(A: np.ndarray) -> np.ndarray:
 def np_sqrt(A: np.ndarray) -> np.ndarray:
     """Matrix square root"""
     e, v = diagonalize(A)
+    return _sqrt_from_eigendecomposition(e, v)
+
+
+def _sqrt_from_eigendecomposition(e: np.ndarray, v: np.ndarray) -> np.ndarray:
     sqrt_matrix = v @ np.diag(np.sqrt(e)) @ np.transpose(np.conjugate(v))
     return sqrt_matrix
+
+
+def np_sqrt_and_entropy(A: np.ndarray) -> tuple[np.ndarray, float]:
+    """Compute a matrix square root and its entropy with one eigendecomposition."""
+    e, v = diagonalize(A)
+    return _sqrt_from_eigendecomposition(e, v), _entropy_from_eigenvalues(e)
 
 
 def ptrace(
@@ -478,10 +593,17 @@ def information(rho: np.ndarray, key: tuple | None = None) -> float:
 
 def von_Neumann_entropy(rho: np.ndarray, key: tuple | None = None) -> float:
     """
-    von Neumann entropy of the density matrix rho
+    von Neumann entropy of rho, computing eigenvalues only.
     """
 
-    eigenvalues, eigenvectors = diagonalize(rho)
+    eigenvalues = np.linalg.eigvalsh(rho)
+    return _entropy_from_eigenvalues(eigenvalues, key)
+
+
+def _entropy_from_eigenvalues(
+    eigenvalues: np.ndarray, key: tuple | None = None
+) -> float:
+    """Evaluate entropy without repeating an available eigendecomposition."""
     entropy = 0.0
 
     for eigval in eigenvalues:
@@ -499,8 +621,7 @@ def von_Neumann_entropy(rho: np.ndarray, key: tuple | None = None) -> float:
 
 def diagonalize(A: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """
-    Diagonalization based on np.eigh including orthogonalization
+    Hermitian eigendecomposition; eigh already returns orthonormal eigenvectors.
     """
     eigenvalues, eigenvectors = np.linalg.eigh(A)
-    eigenvectors, _ = np.linalg.qr(eigenvectors)
     return eigenvalues, eigenvectors

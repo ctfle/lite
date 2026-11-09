@@ -31,12 +31,9 @@ class ClosedSystem(System):
         self,
         init_state: State,
         hamiltonian: Hamiltonian,
-        config: TimeEvolutionConfig | None = None,
-        data: DataContainer | None = None,
+        config: TimeEvolutionConfig = TimeEvolutionConfig,
+        data: DataContainer = DataContainer,
     ):
-        # fresh defaults per instance, never shared between runs
-        config = TimeEvolutionConfig() if config is None else config
-        data = DataContainer() if data is None else data
         super().__init__(
             init_state=init_state, config=config, data=data, operator=hamiltonian
         )

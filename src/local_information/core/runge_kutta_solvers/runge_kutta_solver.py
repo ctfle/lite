@@ -55,6 +55,7 @@ class RungeKuttaSolver(ABC):
             raise ValueError(f"no RK solver for given order: {self.config.RK_order}")
 
         self._step_size = self.config.step_size
+        self.last_step_size = 0.0
         self._max_error = self.max_error
 
         self.range_ = range_
@@ -91,6 +92,41 @@ class RungeKuttaSolver(ABC):
     def solve(
         self, state: State, final_time: float | None = None
     ) -> tuple[LatticeDict, float]:
+        """Retry invalid trial stages instead of accepting a non-finite error.
+
+        A large trial step can leave the domain of the Petz square root before
+        the embedded error estimate is available. The input state is unchanged
+        by a trial, so retry from that state with a smaller step.
+        """
+        for _ in range(32):
+            try:
+                with np.errstate(invalid="raise", divide="raise", over="raise"):
+                    return self._solve(state, final_time=final_time)
+            except (FloatingPointError, np.linalg.LinAlgError) as error:
+                # A bad input state cannot be repaired by shrinking the step.
+                for key, rho in state.density_matrix.items():
+                    if not np.all(np.isfinite(rho)):
+                        raise ValueError(
+                            f"Non-finite input density matrix at {key} before evolution"
+                        ) from error
+                    if np.linalg.eigvalsh(rho)[0] < 0:
+                        raise ValueError(
+                            f"Negative input density matrix at {key} before evolution; "
+                            "reducing the Runge-Kutta step cannot repair it"
+                        ) from error
+                self.step_size *= 0.5
+                if state.current_time + self.step_size == state.current_time:
+                    raise ValueError(
+                        "No valid Runge-Kutta step at machine precision"
+                    ) from error
+                logger.debug(
+                    "Invalid Runge-Kutta trial; retrying with step %s", self.step_size
+                )
+        raise ValueError("No valid Runge-Kutta step after 32 step reductions")
+
+    def _solve(
+        self, state: State, final_time: float | None = None
+    ) -> tuple[LatticeDict, float]:
         """Compute single runge kutta step."""
         rho_dict, dyn_max_l, current_time = (
             state.density_matrix,
@@ -99,6 +135,8 @@ class RungeKuttaSolver(ABC):
         )
 
         repeat = True
+        next_step_size = float(self.step_size)
+        endpoint_clipped = False
         while repeat:
             total_high = LatticeDict()
             total_low = LatticeDict()
@@ -144,6 +182,8 @@ class RungeKuttaSolver(ABC):
             # compute allowed stepsize
             allowed_step_size = np.zeros(len(error))
             actual_error = np.linalg.norm(list(error.values()), np.inf, axis=(1, 2))
+            if not np.all(np.isfinite(actual_error)):
+                raise FloatingPointError("Non-finite Runge-Kutta error estimate")
             logger.debug(f"actual_error is: {actual_error} ")
 
             for j, _ in enumerate(error):
@@ -156,28 +196,38 @@ class RungeKuttaSolver(ABC):
                 else:
                     allowed_step_size[j] = (self.step_size * 1.05) / 0.9
 
+            suggested_step = float(np.min(allowed_step_size) * 0.9)
             # compare optimal step size to actual step size
             if np.any(allowed_step_size < self.step_size):
                 # redo calculation with smaller stepsize
-                self.step_size = np.min(allowed_step_size) * 0.9
+                self.step_size = suggested_step
+                next_step_size = suggested_step
+                endpoint_clipped = False
             else:
+                if not endpoint_clipped:
+                    next_step_size = suggested_step
                 # repeat to land exactly on the final time
                 if (
                     final_time is not None
                     and current_time + self.step_size > final_time
                 ):
+                    # This full trial passed error control. Preserve its next
+                    # proposal while shortening only the step to the endpoint.
                     self.step_size = final_time - current_time
+                    endpoint_clipped = True
                 else:
                     time = current_time + self.step_size
+                    self.last_step_size = float(time - current_time)
                     # update the step size
-                    self.step_size = np.min(allowed_step_size) * 0.9
+                    self.step_size = next_step_size
                     repeat = False
 
         tot = rho_dict + total_high
         tot_ct = (rho_dict + total_high).dagger()
 
         logger.info(
-            f"finished Runge-Kutta time step with adaptive stepsize {self.step_size}"
+            f"finished Runge-Kutta time step: accepted dt={self.last_step_size}, "
+            f"proposed next dt={self.step_size}"
         )
         return 0.5 * (tot + tot_ct), time
 
@@ -193,7 +243,8 @@ class RungeKuttaSolver(ABC):
             # petz_map the density matrices at level max_l +_range
             for r in range(self.range_):
                 work_dict += get_higher_level(
-                    work_dict, dyn_max_l + r, sqrt_method=sqrt_method
+                    work_dict, dyn_max_l + r, sqrt_method=sqrt_method,
+                    smoothing_delta=self.config.petz_smoothing_delta,
                 )
         if work_dict is not None:
             key_max_l_dim = work_dict.dim_at_level(dyn_max_l)

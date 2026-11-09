@@ -16,7 +16,8 @@ logger = logging.getLogger()
 
 
 def get_finite_state(
-    density_matrix_sequence: Sequence[np.ndarray], max_l: int
+    density_matrix_sequence: Sequence[np.ndarray], max_l: int,
+    *, sqrt_method: bool = True, smoothing_delta: float = 0.0,
 ) -> tuple[LatticeDict[tuple[float, int], np.ndarray], int]:
     """
     Computes all the density matrices at level max_l if possible.
@@ -61,13 +62,15 @@ def get_finite_state(
                 state_dict,
                 state_level,
             ) = build_higher_level_from_sequence_of_density_matrices(
-                density_matrix_sequence, max_l
+                density_matrix_sequence, max_l,
+                sqrt_method=sqrt_method, smoothing_delta=smoothing_delta,
             )
         else:
             # the top of the structure_part triangle has level
             # which is larger than max_l: stop at max_l
             state_dict = get_density_matrices_at_level(
-                density_matrix_sequence, level=max_l
+                density_matrix_sequence, level=max_l,
+                sqrt_method=sqrt_method, smoothing_delta=smoothing_delta,
             )
             state_level = max_l
 
@@ -83,7 +86,8 @@ def check_equal_dims(density_matrix_sequence: Sequence[np.ndarray]):
 
 
 def build_higher_level_from_sequence_of_density_matrices(
-    density_matrix_sequence: Sequence[np.ndarray], level: int
+    density_matrix_sequence: Sequence[np.ndarray], level: int,
+    *, sqrt_method: bool = True, smoothing_delta: float = 0.0,
 ) -> tuple[LatticeDict, int]:
     """
     Builds higher level density matrices using the Petz map.
@@ -112,7 +116,8 @@ def build_higher_level_from_sequence_of_density_matrices(
                 key_B=key_B,
                 density_matrix_A=higher_level_density_matrices[key_A],
                 density_matrix_B=higher_level_density_matrices[key_B],
-                sqrt_method=True,
+                sqrt_method=sqrt_method,
+                smoothing_delta=smoothing_delta,
             )
             petz_mapped_density_matrix = petz_map.get_combined_system()
             new_key = petz_map.get_new_key()
@@ -128,6 +133,7 @@ def build_higher_level_from_sequence_of_density_matrices(
 
 def get_all_density_matrices_at_level_from_sequence_of_density_matrices(
     density_matrix_sequence: Sequence[np.ndarray],
+    *, sqrt_method: bool = True, smoothing_delta: float = 0.0,
 ) -> LatticeDict:
     """
     Computes all the density matrices at input level determined from the dimension of
@@ -141,7 +147,8 @@ def get_all_density_matrices_at_level_from_sequence_of_density_matrices(
         high_level_density_matrices,
         level,
     ) = build_higher_level_from_sequence_of_density_matrices(
-        density_matrix_sequence, level=2 * input_level
+        density_matrix_sequence, level=2 * input_level,
+        sqrt_method=sqrt_method, smoothing_delta=smoothing_delta,
     )
 
     # compute *all* the density matrices at level `input_level`
@@ -153,18 +160,21 @@ def get_all_density_matrices_at_level_from_sequence_of_density_matrices(
 
 
 def get_density_matrices_at_level(
-    density_matrix_sequence: Sequence[np.ndarray], level: int
+    density_matrix_sequence: Sequence[np.ndarray], level: int,
+    *, sqrt_method: bool = True, smoothing_delta: float = 0.0,
 ) -> LatticeDict:
     input_level = get_base_2_dim(density_matrix_sequence[0]) - 1
     density_matrices_at_input_level = (
         get_all_density_matrices_at_level_from_sequence_of_density_matrices(
-            density_matrix_sequence
+            density_matrix_sequence,
+            sqrt_method=sqrt_method, smoothing_delta=smoothing_delta,
         )
     )
     if input_level <= level:
         # increase level
         density_matrices_at_level = increment_level_from_to(
-            density_matrices_at_input_level, from_level=input_level, to_level=level
+            density_matrices_at_input_level, from_level=input_level, to_level=level,
+            sqrt_method=sqrt_method, smoothing_delta=smoothing_delta,
         )
     else:
         # reduce level
@@ -176,12 +186,14 @@ def get_density_matrices_at_level(
 
 
 def increment_level_from_to(
-    density_matrices: LatticeDict, from_level: int, to_level: int
+    density_matrices: LatticeDict, from_level: int, to_level: int,
+    *, sqrt_method: bool = True, smoothing_delta: float = 0.0,
 ) -> LatticeDict:
     higher_level_density_matrices = density_matrices.deepcopy()
     for ell in range(from_level, to_level):
         higher_level_density_matrices = get_higher_level_single_processing(
-            higher_level_density_matrices, ell
+            higher_level_density_matrices, ell,
+            sqrt_method=sqrt_method, smoothing_delta=smoothing_delta,
         )
 
     return higher_level_density_matrices

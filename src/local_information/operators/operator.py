@@ -94,26 +94,29 @@ class Operator:
     @cached_property
     def operator(self) -> LatticeDict:
         """
-        Constructs all local Hamiltonians at scale of 'range' and stores
-        the result as csr matrix in a lattice dict
+        Decompose the finite operator into blocks of ``range_ + 1`` sites.
+
+        Each physical coupling is shared equally among the blocks containing
+        its support. At open boundaries there are fewer such blocks, so a
+        constant bulk divisor would undercount boundary terms. Couplings are
+        the physical strengths, including any explicitly reduced edge fields.
         """
-        # deepcopy operator_couplings since its modified later
-        operator_couplings = deepcopy(self.couplings)
-        # modify hamiltonian couplings to obtain H_n elements
-        for operator_element in operator_couplings:
-            factor = self.range_ - (len(operator_element[0]) - 1)
-
-            if type(operator_element[1]) is list:
-                operator_element[1] = list(np.array(operator_element[1]) / (1 + factor))
-            else:
-                operator_element[1] /= 1 + factor
-
         H_n = LatticeDict()
         for n in range(int(self.L - self.range_)):
-            # construct operators for n_min= n and n_max = n_min + _ell_ +1
-            ham = construct_hamiltonian(
-                n + self.range_ + 1, operator_couplings, n_min=n
-            )
+            local_couplings = []
+            for string, strengths in self.couplings:
+                values = [0.0] * (self.range_ + 1)
+                for offset in range(self.range_ + 2 - len(string)):
+                    site = n + offset
+                    # Valid block starts containing [site, site+len(string)-1].
+                    first = max(0, site + len(string) - 1 - self.range_)
+                    last = min(site, self.L - self.range_ - 1)
+                    strength = (strengths[site]
+                                if isinstance(strengths, (list, tuple, np.ndarray))
+                                else strengths)
+                    values[offset] = strength / (last - first + 1)
+                local_couplings.append([string, values])
+            ham = construct_hamiltonian(self.range_ + 1, local_couplings)
             H_n[LatticeKey(n + self.range_ / 2, self.range_)] = ham.tocsr()
 
         return H_n

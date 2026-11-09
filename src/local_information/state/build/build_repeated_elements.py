@@ -11,7 +11,8 @@ from local_information.state.state_utils import get_base_2_dim
 
 
 def get_boundaries(
-    density_matrix_sequence: Sequence[np.ndarray], max_l: int
+    density_matrix_sequence: Sequence[np.ndarray], max_l: int,
+    *, sqrt_method: bool = True, smoothing_delta: float = 0.0,
 ) -> list[LatticeDict]:
     """
     This function discriminates the two cases of having
@@ -21,17 +22,20 @@ def get_boundaries(
     """
     if len(density_matrix_sequence) == 1:
         density_matrices_at_level_max_l = compute_repeated_elements(
-            density_matrix_sequence[0], max_l
+            density_matrix_sequence[0], max_l,
+            sqrt_method=sqrt_method, smoothing_delta=smoothing_delta,
         )
         repeated_elements = [density_matrices_at_level_max_l]
 
     # asymptotic invariant
     elif len(density_matrix_sequence) == 2:
         repeated_elements_left = compute_repeated_elements(
-            density_matrix_sequence[0], max_l, orientation="left"
+            density_matrix_sequence[0], max_l, orientation="left",
+            sqrt_method=sqrt_method, smoothing_delta=smoothing_delta,
         )
         repeated_elements_right = compute_repeated_elements(
-            density_matrix_sequence[1], max_l, orientation="right"
+            density_matrix_sequence[1], max_l, orientation="right",
+            sqrt_method=sqrt_method, smoothing_delta=smoothing_delta,
         )
         repeated_elements = [repeated_elements_left, repeated_elements_right]
 
@@ -44,7 +48,8 @@ def get_boundaries(
 
 
 def compute_repeated_elements(
-    density_matrix: np.ndarray, max_l: int, orientation: str = "right"
+    density_matrix: np.ndarray, max_l: int, orientation: str = "right",
+    *, sqrt_method: bool = True, smoothing_delta: float = 0.0,
 ) -> LatticeDict:
     """
     Computes the required density matrices at level max_l
@@ -56,7 +61,8 @@ def compute_repeated_elements(
 
     density_matrix_sequence = [density_matrix] * repetitions
     density_matrices_at_max_l = get_density_matrices_at_level(
-        density_matrix_sequence=density_matrix_sequence, level=max_l
+        density_matrix_sequence=density_matrix_sequence, level=max_l,
+        sqrt_method=sqrt_method, smoothing_delta=smoothing_delta,
     )
     # store only the density matrices required for time evolution:
     # the leftmost size ones for orientation ='right'

@@ -80,7 +80,7 @@ def diff_const(density_matrix: LatticeDict, state: State, operator: SystemOperat
         # update rho_dict to higher level
         for j in range(2 * operator.range_ - state.dyn_max_l):
             density_matrix += get_higher_level_single_processing(
-                density_matrix, state.dyn_max_l + j
+                density_matrix, state.dyn_max_l + j, **state.petz_options
             )
 
     for key, rho in density_matrix.items_at_level(operator.range_):

@@ -7,3 +7,5 @@ __pycache__/
 *.egg-info/
 .pytest_cache/
 examples/NV_dynamics/data/
+infinite_temperature_hydrodynamic_tail/
+comparison_with_purification_thermal_states/

@@ -167,7 +167,7 @@ class InformationMinimizer:
             # check if it has trace of 1
             if not np.isclose(np.trace(rho), 1, atol=tol):
                 logger.error("minimized rho has not unit trace")
-                logger.info(f"key= {key}")
+                logger.info("key", key)
                 logger.info(f"np.trace(rho)= {np.trace(rho)}")
 
                 e, v = np.linalg.eigh(rho)

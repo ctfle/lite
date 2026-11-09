@@ -58,10 +58,9 @@ class ConjugateGradientOptimizer:
             solution_dict[key] = xk
 
             if checks:
-                if np.linalg.norm(np.trace(solution_dict[key])) > 10 ** (-16):
+                if np.linalg.norm(np.trace(solution_dict[key]) > 10 ** (-16)):
                     logger.info(
-                        "np.trace(solution_dict[key]) = %s",
-                        np.trace(solution_dict[key]),
+                        "np.trace(solution_dict[key])", np.trace(solution_dict[key])
                     )
         return solution_dict
 

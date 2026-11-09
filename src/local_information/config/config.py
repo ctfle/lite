@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import math
 import sys
 from dataclasses import dataclass, asdict, fields, field
 from datetime import datetime
@@ -43,7 +44,7 @@ class LoggingConfig(Config):
 class RungeKuttaConfig(Config):
     """Dataclass collecting Runge-Kutta parameters"""
 
-    # typ of Petz map to be used: default 'sqrt'. Other options: 'exponential'
+    # Petz map for all system reconstructions: 'sqrt' or 'exponential'.
     petz_map: str = "sqrt"
     # RK order to which the von-Neumann equation is solved: choices are '45' (i.e. 4 (5)),
     # '23' (i.e. 3 (2)) and '1012' (i.e. 10 (12))
@@ -52,9 +53,14 @@ class RungeKuttaConfig(Config):
     max_error: float = 1e-8
     # adaptive step size
     step_size: float = 0.015
+    # Half-width in nats for blending sqrt maps in RK, growth, and state construction.
+    # Zero keeps the sharp rule. Exponential recovery does not use this width.
+    petz_smoothing_delta: float = 0.0
 
     def __post_init__(self):
         assert self.max_error > 0, ValueError("max_error must be >0")
+        if not math.isfinite(self.petz_smoothing_delta) or self.petz_smoothing_delta < 0:
+            raise ValueError("petz_smoothing_delta must be finite and >= 0")
 
 
 @dataclass

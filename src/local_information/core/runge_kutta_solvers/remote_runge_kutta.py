@@ -56,6 +56,8 @@ class RemoteRungeKuttaSolver(RungeKuttaSolver):
         )
 
         repeat = True
+        next_step_size = float(self.step_size)
+        endpoint_clipped = False
         while repeat:
             total_high = LatticeDict()
             total_low = LatticeDict()
@@ -119,33 +121,41 @@ class RemoteRungeKuttaSolver(RungeKuttaSolver):
                     else:
                         allowed_step_size[j] = (self.step_size * 1.05) / 0.9
 
+                suggested_step = float(np.min(allowed_step_size) * 0.9)
                 # compare optimal step size to actual step size
                 if np.any(allowed_step_size < self.step_size):
                     # redo calculation with smaller step size
-                    self.step_size = np.min(allowed_step_size) * 0.9
+                    self.step_size = suggested_step
+                    next_step_size = suggested_step
+                    endpoint_clipped = False
                 else:
+                    if not endpoint_clipped:
+                        next_step_size = suggested_step
                     # repeat to land exactly on the final time
                     if (
                         final_time is not None
                         and current_time + self.step_size > final_time
                     ):
                         self.step_size = final_time - current_time
+                        endpoint_clipped = True
                     else:
                         time = current_time + self.step_size
                         # update the step size
-                        self.step_size = np.min(allowed_step_size) * 0.9
+                        self.step_size = next_step_size
                         repeat = False
 
             repeat = COMM.bcast(repeat, root=0)
 
         time = COMM.bcast(time, root=0)
         self.step_size = COMM.bcast(self.step_size, root=0)
+        self.last_step_size = float(time - current_time)
 
         tot = rho_dict + total_high
         tot_ct = (rho_dict + total_high).dagger()
 
         logger.info(
-            f"finished Runge-Kutta time step with adaptive stepsize {self.step_size}"
+            f"finished Runge-Kutta time step: accepted dt={self.last_step_size}, "
+            f"proposed next dt={self.step_size}"
         )
         return 0.5 * (tot + tot_ct), time
 
@@ -161,7 +171,8 @@ class RemoteRungeKuttaSolver(RungeKuttaSolver):
             # petz_map the density matrices at level max_l +_range
             for r in range(self.range_):
                 higher_level_dict = get_higher_level(
-                    work_dict, dyn_max_l + r, sqrt_method=sqrt_method
+                    work_dict, dyn_max_l + r, sqrt_method=sqrt_method,
+                    smoothing_delta=self.config.petz_smoothing_delta,
                 )
                 if RANK == 0:
                     work_dict += higher_level_dict

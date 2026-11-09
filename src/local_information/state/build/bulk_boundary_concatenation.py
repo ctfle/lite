@@ -9,6 +9,7 @@ from typing import Sequence
 def concatenate_bulk_and_boundaries(
     bulk_density_matrices: LatticeDict,
     boundaries: list[LatticeDict],
+    *, sqrt_method: bool = True, smoothing_delta: float = 0.0,
 ) -> LatticeDict:
     """
     This function computes the combined LatticeDict by shifted concatenation of
@@ -20,8 +21,14 @@ def concatenate_bulk_and_boundaries(
 
     # get all density matrices on the same level
     bulk_level = bulk_density_matrices.get_max_level()
-    repeated_left = align_to_level(repeated_left, bulk_level)
-    repeated_right = align_to_level(repeated_right, bulk_level)
+    repeated_left = align_to_level(
+        repeated_left, bulk_level,
+        sqrt_method=sqrt_method, smoothing_delta=smoothing_delta,
+    )
+    repeated_right = align_to_level(
+        repeated_right, bulk_level,
+        sqrt_method=sqrt_method, smoothing_delta=smoothing_delta,
+    )
 
     number_of_sites_required_for_repeated_left = len(repeated_left) + bulk_level
     number_of_sites_required_for_structure = len(bulk_density_matrices) + bulk_level
@@ -64,7 +71,8 @@ def extract_left_and_right_boundaries(boundary_density_matrices: Sequence[Lattic
 
 
 def get_combined(
-    bulk: LatticeDict, boundaries: list[LatticeDict], level: int
+    bulk: LatticeDict, boundaries: list[LatticeDict], level: int,
+    *, sqrt_method: bool = True, smoothing_delta: float = 0.0,
 ) -> LatticeDict:
     """
     This functions 'fills the gaps' between the bulk and the boundary parts
@@ -76,7 +84,9 @@ def get_combined(
     (and not everything as it is done here)
     """
     boundaries = extract_left_and_right_boundaries(boundaries)
-    bulk_boundary_concatenation = concatenate_bulk_and_boundaries(bulk, boundaries)
+    bulk_boundary_concatenation = concatenate_bulk_and_boundaries(
+        bulk, boundaries, sqrt_method=sqrt_method, smoothing_delta=smoothing_delta,
+    )
     # after concatenation all the level of the density matrices is that of the
     # input bulk density matrices
     bulk_level = bulk_boundary_concatenation.get_max_level()
@@ -87,6 +97,7 @@ def get_combined(
         bulk_level -= 1
 
     combined = increment_level_from_to(
-        bulk_boundary_concatenation, from_level=0, to_level=level
+        bulk_boundary_concatenation, from_level=0, to_level=level,
+        sqrt_method=sqrt_method, smoothing_delta=smoothing_delta,
     )
     return combined

@@ -10,6 +10,7 @@ from local_information.core.petz_map import (
     PetzMap,
     np_logm,
     np_sqrt,
+    np_sqrt_and_entropy,
     ptrace,
     information,
 )
@@ -30,13 +31,14 @@ def get_higher_level(
     input_dict: LatticeDict,
     level: int,
     sqrt_method: bool = True,
+    smoothing_delta: float = 0.0,
 ) -> LatticeDict:
     """
     Computes all density matrices at level ell+1 given density matrices
     at level ell in between n_min to n_max
     """
     return get_higher_level_single_processing(
-        input_dict, level, sqrt_method=sqrt_method
+        input_dict, level, sqrt_method=sqrt_method, smoothing_delta=smoothing_delta
     )
 
 
@@ -44,6 +46,7 @@ def get_higher_level_single_processing(
     input_dict: LatticeDict,
     level: int,
     sqrt_method: bool = True,
+    smoothing_delta: float = 0.0,
 ) -> LatticeDict:
     """
     Computes the density matrices one level higher than `level` using the Petz map
@@ -53,11 +56,18 @@ def get_higher_level_single_processing(
     # Only proceed if there are at least two sites
     # Single site at given level can happen during MPI
     if not input_dict.has_single_entry_at_level(level):
+        precomputed_entropies = {}
         if sqrt_method:
-            # precompute all sqrts
+            # Adjacent Petz maps reuse each block's square root and entropy.
             precomp_dict = LatticeDict()
             for key, density_matrix in input_dict.items_at_level(level):
-                precomp_dict[key] = np_sqrt(density_matrix)
+                if level > 0:
+                    precomp_dict[key], precomputed_entropies[key] = (
+                        np_sqrt_and_entropy(density_matrix)
+                    )
+                else:
+                    # Single-site blocks do not overlap: no entropy is needed.
+                    precomp_dict[key] = np_sqrt(density_matrix)
 
         else:
             # precompute the logm of all relevant density matrices
@@ -81,7 +91,10 @@ def get_higher_level_single_processing(
                 density_matrix_B=dens_B,
                 precomputed_sqrt_or_log_of_density_matrix_A=precomp_dens_A,
                 precomputed_sqrt_or_log_of_density_matrix_B=precomp_dens_B,
+                precomputed_entropy_A=precomputed_entropies.get(key),
+                precomputed_entropy_B=precomputed_entropies.get(next_key),
                 sqrt_method=sqrt_method,
+                smoothing_delta=smoothing_delta,
             )
             density_matrix_on_combined_system = petz_map.get_combined_system()
             new_key = petz_map.get_new_key()
@@ -98,6 +111,10 @@ def compute_mutual_information_at_level(
     Returns the mutual information together with the lower density matrices at level 'ell - 1'.
     """
     work_dict = rho_dict.deepcopy()
+    # Rebuild reductions only from the requested level. LatticeDict addition
+    # sums shared keys, so keeping cached lower levels would double their
+    # matrices (and traces) when the fresh reductions are added below.
+    work_dict.kill_all_except(level)
     # compute 2 lower levels and stores them in a separate LatticeDict
     inf_dict = compute_von_Neumann_information(work_dict, level)
 
@@ -332,7 +349,8 @@ def information_gradient(
         # Note: the information gradient is given by -ln(rho) -1.
         # -1 is not required since this term vanishes later on
         # We compensate for the minus in compute_commutator
-        info_gradient = np_logm(r_AB)
+        # Real infinite-temperature blocks can have complex reduced neighbors.
+        info_gradient = np_logm(r_AB).astype(np.complex128)
 
         # subtract the current originating from lower levels
         if level >= 1:
@@ -380,7 +398,10 @@ def arctanh(x: float) -> float:
     return 0.5 * np.log(x + 1.0) - 0.5 * np.log(1 - x)
 
 
-def align_to_level(density_matrix: LatticeDict, level: int) -> LatticeDict:
+def align_to_level(
+    density_matrix: LatticeDict, level: int,
+    *, sqrt_method: bool = True, smoothing_delta: float = 0.0,
+) -> LatticeDict:
     input_level = density_matrix.get_max_level()
     if input_level > level:
         # reduce to level
@@ -393,9 +414,9 @@ def align_to_level(density_matrix: LatticeDict, level: int) -> LatticeDict:
         # increase level
         ell = input_level
         while ell < level:
-            n_min, n_max = density_matrix.boundaries(ell)
             density_matrix = get_higher_level(
-                density_matrix, n_min=n_min, n_max=n_max, ell=ell
+                density_matrix, ell,
+                sqrt_method=sqrt_method, smoothing_delta=smoothing_delta,
             )
             ell += 1
 

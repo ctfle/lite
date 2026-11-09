@@ -96,11 +96,14 @@ def get_largest_dim(matrix_sequence: Sequence[np.ndarray]) -> int:
 
 
 def add_higher_level_site(
-    input_lattice: LatticeDict, key: LatticeKey, next_key: LatticeKey
+    input_lattice: LatticeDict, key: LatticeKey, next_key: LatticeKey,
+    *, sqrt_method: bool = True, smoothing_delta: float = 0.0,
 ):
     assert key.level == next_key.level, "keys must be associated with same level"
     temp_dict = LatticeDict()
     temp_dict[key] = input_lattice[key]
     temp_dict[next_key] = input_lattice[next_key]
 
-    return get_higher_level_single_processing(temp_dict, key.level)
+    return get_higher_level_single_processing(
+        temp_dict, key.level, sqrt_method=sqrt_method, smoothing_delta=smoothing_delta
+    )

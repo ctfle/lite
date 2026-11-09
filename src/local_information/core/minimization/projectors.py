@@ -45,8 +45,10 @@ class Projector:
 
     def _get_hessian_matrix_elements(self, key: LatticeKey) -> np.ndarray:
         """
-        Computes the elements h_ij that define the Hessian operator H; they're just a function of
-        the eigenvalues of rho
+        Computes entropy Hessian coefficients from the eigenvalues of rho:
+        h_ij = -(log(lambda_i) - log(lambda_j)) / (lambda_i - lambda_j),
+        with limit -1 / lambda_i for equal eigenvalues. The arctanh form
+        needs a factor two because log(a / b) = 2 * arctanh((a - b) / (a + b)).
         """
         density_matrix_eigenvalues = self._eigen_values(key)
         length = len(density_matrix_eigenvalues)
@@ -55,7 +57,7 @@ class Projector:
         for j in range(length):
             for k in range(j + 1):
                 if density_matrix_eigenvalues[j] != density_matrix_eigenvalues[k]:
-                    matrix[j, k] = -arctanh(
+                    matrix[j, k] = -2.0 * arctanh(
                         (density_matrix_eigenvalues[j] - density_matrix_eigenvalues[k])
                         / (
                             density_matrix_eigenvalues[j]
@@ -63,7 +65,7 @@ class Projector:
                         )
                     ) / (density_matrix_eigenvalues[j] - density_matrix_eigenvalues[k])
                 else:
-                    matrix[j, k] = -1 / (
+                    matrix[j, k] = -2.0 / (
                         density_matrix_eigenvalues[j] + density_matrix_eigenvalues[k]
                     )
 

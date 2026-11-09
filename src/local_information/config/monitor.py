@@ -4,7 +4,7 @@ import logging
 import os.path
 import pickle
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from importlib import import_module
 from pathlib import Path
 from typing import List, AnyStr, Dict, Any
@@ -29,6 +29,7 @@ from local_information.state.state import State
 
 if TYPE_CHECKING:
     from local_information.typedefs import SystemOperator
+    from local_information.core.runge_kutta_solvers.runge_kutta_solver import RungeKuttaSolver
 
 logger = logging.getLogger()
 
@@ -41,6 +42,8 @@ class DataConfig:
     diffusion_length: bool = True
     diffusion_const: bool = True
     energy_distribution: bool = False
+    integration_step: bool = False
+    proposed_step: bool = False
     times: bool = True
     system_size: bool = True
 
@@ -83,6 +86,13 @@ class DataConfig:
             with open(config_path, "r") as file:
                 loaded_dict = yaml.safe_load(file)
 
+        # Older checkpoints registered these solver diagnostics as script
+        # callbacks. Their file names and values are unchanged as built-ins.
+        for name in ("integration_step", "proposed_step"):
+            if name in loaded_dict.get("observables", []):
+                loaded_dict[name] = True
+                loaded_dict["observables"] = [n for n in loaded_dict["observables"] if n != name]
+
         # setup observables if needed
         if loaded_dict["observables"]:
             # parse strings to function
@@ -110,7 +120,7 @@ class DataConfig:
 
 @dataclass
 class DataContainer:
-    config: DataConfig = field(default_factory=DataConfig)
+    config: DataConfig = DataConfig()
 
     def __post_init__(self):
         self.get_default_observables = DefaultObservables()
@@ -153,6 +163,7 @@ class DataContainer:
         information_dict: LatticeDict,
         state: State,
         operator: SystemOperator,
+        solver: RungeKuttaSolver | None = None,
     ):
         for observable_name, data_list in self.default_observables_dict.items():
             # call the helper class to compute all default observables
@@ -162,6 +173,7 @@ class DataContainer:
                 information_dict=information_dict,
                 state=state,
                 operator=operator,
+                solver=solver,
             )
             if observable_result is not None:
                 data_list.append(observable_result)
@@ -293,7 +305,7 @@ class DataContainer:
     def return_latest(self) -> dict:
         """Return last updated values."""
         latest_values = dict()
-        for observable_name, observable_values in self.custom_observables_dict.items():
+        for observable_name, observable_values in (self.custom_observables_dict or {}).items():
             if len(observable_values) == 0:
                 latest_values[observable_name] = None
             else:
@@ -312,6 +324,7 @@ class DefaultObservables:
     state: State = None
     operator: SystemOperator = None
     density_matrix: LatticeDict = None
+    solver: RungeKuttaSolver | None = None
 
     def __init__(self):
         self.observables = {
@@ -322,6 +335,8 @@ class DefaultObservables:
             "system_size": self.get_system_size,
             "info_lattice": self.get_information_lattice,
             "info_current": self.get_information_current,
+            "integration_step": self.get_integration_step,
+            "proposed_step": self.get_proposed_step,
         }
 
     def __call__(
@@ -331,9 +346,11 @@ class DefaultObservables:
         information_dict: LatticeDict[float],
         state: State,
         operator: SystemOperator,
+        solver: RungeKuttaSolver | None = None,
     ) -> Any:
         self.state = state
         self.operator = operator
+        self.solver = solver
         self.density_matrix = density_matrix
         self.information_dict = information_dict
 
@@ -371,3 +388,15 @@ class DefaultObservables:
 
     def get_information_current(self) -> dict:
         return self.state.get_information_current(self.operator)
+
+    def get_integration_step(self) -> float:
+        """Last accepted integration dt; zero before the first solver step."""
+        if self.solver is None:
+            raise ValueError("integration_step requires the system's Runge-Kutta solver")
+        return float(self.solver.last_step_size)
+
+    def get_proposed_step(self) -> float:
+        """Error-controlled proposal for the next integration step."""
+        if self.solver is None:
+            raise ValueError("proposed_step requires the system's Runge-Kutta solver")
+        return float(self.solver.step_size)
